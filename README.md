@@ -1,1 +1,1 @@
-## Learinig notes from books I read (written on obsidian)
+## Learning notes from books I read (written on obsidian)
