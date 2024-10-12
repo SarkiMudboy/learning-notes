@@ -1,4 +1,99 @@
-## Recursion
+
+### Intro
+
+A ***data structure*** is a systematic way of organizing and accessing data, and an ***algorithm*** is a step-by-step procedure for performing some task in a finite amount of time.
+
+The primary analysis tool used involves characterizing the running times of algorithms and data structure operations, with space usage also being of interest. Running time is a natural measure of “goodness,” since time is a precious resource—computer solutions should run as fast as possible. In general, the running time of an algorithm or data structure operation increases with the input size, although it may also vary for different inputs of the same size. Also, the running time is affected by the hardware environment (e.g., the processor, clock rate, memory, disk) and software environment (e.g., the operating system, programming language) in which the algorithm is implemented and executed. All other factors being equal, the running time of the same algorithm on the same input data will be smaller if the computer has, say, a much faster processor or if the implementation is done in a program compiled into native machine code instead of an interpreted implementation.
+
+Focusing on running time as a primary measure of goodness requires that we be able to use a few mathematical tools. In spite of the possible variations that come from different environmental factors, we would like to focus on the relationship between the running time of an algorithm and the size of its input.
+
+**Experimental approach to measuring the goodness of an algo**:
+In experimental studies: we can study its running time by executing it on various test inputs and recording the time spent during each execution.
+*Challenges*:
+While experimental studies of running times are valuable, especially when finetuning production-quality code, there are three major limitations to their use for algorithm analysis: 
+- Experimental running times of two algorithms are difficult to directly compare unless the experiments are performed in the same hardware and software environments.
+- Experiments can be done only on a limited set of test inputs; hence, they leave out the running times of inputs not included in the experiment (and these inputs may be important).
+- An algorithm must be fully implemented in order to execute it to study its running time experimentally.
+
+**Counting primitive ops**:
+Formally, a primitive operation corresponds to a low-level instruction with an execution time that is constant. Ideally, this might be the type of basic operation that is executed by the hardware, although many of our primitive operations may be translated to a small number of instructions. Instead of trying to determine the specific execution time of each primitive operation, we will simply count how many primitive operations are executed, and use this number t as a measure of the running time of the algorithm. The implicit assumption in this approach is that the running times of different primitive operations will be fairly similar. Thus, the number, ***t***, of primitive operations an algorithm performs will be proportional to the actual running time of that algorithm.
+*They include*:
+- Assigning an identifier to an object.
+- Determining the object associated with an identifier.
+- Performing an arithmetic operation (for example, adding two numbers).
+- Comparing two numbers.
+- Accessing a single element of a Python list by index.
+- Calling a function (excluding operations executed within the function).
+- Returning from a function.
+
+To capture the order of growth of an algorithm’s running time, we will associate, with each algorithm, a function f(n) that characterizes the number of primitive operations that are performed as a function of the input size n.
+
+**Worst case > Average case**
+
+Worst-case analysis is much easier than average-case analysis, as it requires only the ability to identify the worst-case input, which is often simple. Also, this approach typically leads to better algorithms. Making the standard of success for an algorithm to perform well in the worst case necessarily requires that it will do well on every input.
+
+#### Seven deadly funcs
+
+- ***Constant func***: 
+$$
+f(n) = c
+$$
+	For any size of n, f(n) will always be a constant c. As simple as it is, the constant function is useful in algorithm analysis, because it characterizes the number of steps needed to do a basic operation on a computer (primitive ops).
+
+- ***Logarithmic Func***:  
+$$
+f(n) = logb n
+$$
+	if and only if 
+$$
+	b^x = n
+$$
+	for some constant b > 1 (base)
+	
+	The most common base for the logarithm function in computer science is 2, as computers store integers in binary, and because a common operation in many algorithms is to repeatedly divide an input in half. In fact, this base is so common that we will typically omit it from the notation when it is 2.
+
+- ***Linear Func***:
+$$
+f(n) = n
+$$
+
+	That is, given an input value n, the linear function f assigns the value n itself.
+	This function arises in algorithm analysis any time we have to do a single basic operation for each of n elements.
+
+- **NlogN Func***:
+$$
+	f(n) = nlogn
+$$
+	This function grows a little more rapidly than the linear function and a lot less rapidly than the quadratic function; therefore, we would greatly prefer an algorithm with a running time that is proportional to *nlogn*, than one with quadratic running time. Example the fastest possible algorithms for sorting n arbitrary values require time proportional to *nlogn*.
+
+- ***Quadratic Func***:
+$$
+f(n) = n^2
+$$
+
+	For any given value of n, f(n) assigns a product of itself i.e. n^2. This can be seen in nested loops where the inner loop performs a linear number of operations and the outer loop is performed a linear number of times.
+
+- ***Cubic***: 
+$$
+f(n) = n^3
+$$
+
+- **Exponential Func***:
+$$
+f(n) = b^n
+$$
+
+	where b is a positive constant, called the base, and the argument n is the exponent. That is, function f(n) assigns to the input argument n the value obtained by multiplying the base b by itself n times. As was the case with the logarithm function, the most common base for the exponential function in algorithm analysis is b = 2. 
+	For example, an integer word containing n bits can represent all the nonnegative integers less than 2^n. If we have a loop that starts by performing one operation and then doubles the number of operations performed with each iteration, then the number of operations performed in the nth iteration is 2^n.
+
+**Ceiling/Floor functions**:
+
+One additional comment concerning the functions above is in order. When discussing logarithms, we noted that the value is generally not an integer, yet the running time of an algorithm is usually expressed by means of an integer quantity, such as the number of operations performed. Thus, the analysis of an algorithm may sometimes involve the use of the floor function and ceiling function, which are defined respectively as follows:
+- floor(x) = the largest integer less than or equal to x.
+- ceil(x) = the smallest integer greater than or equal to x.
+
+
+### CHAPTER 2: Recursion
 
 Recursion is a technique by which a function makes one or more calls to itself during execution, or by which a data structure relies upon smaller instances of the very same type of structure in its representation.
 
