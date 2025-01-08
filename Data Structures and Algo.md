@@ -1,4 +1,3 @@
-
 ### Intro
 
 A ***data structure*** is a systematic way of organizing and accessing data, and an ***algorithm*** is a step-by-step procedure for performing some task in a finite amount of time.
@@ -126,8 +125,6 @@ print('recursive-> ', factorial(14))
 print('iterative-> ', fac_iter(14))
 ```
 
-^2a56d4
-
 A ***recursion trace*** is an illustration of the program's execution of a recursive function. In Python, each time a function (recursive or otherwise) is called, a structure known as an **activation record** or **frame** [Maybe?](https://courses.grainger.illinois.edu/cs225/sp2024/resources/stack-heap/#:~:text=stack%20%3A%20stores%20local%20variables,stores%20the%20code%20being%20executed) & [[Computer Architecture Notes#^5b8bc9]] is created to store information about the progress of that invocation of the function. This activation record includes a namespace for storing the function call’s parameters and local variables and information about which command in the body of the function is currently executing. 
 - When the execution of a function leads to a nested function call, the execution of the former call is suspended and its activation record stores the place in the source code at which the flow of control should continue upon return of the nested call. This process is used both in the standard case of one function calling a different function, or in the recursive case in which a function invokes itself. The key point is that there is a different activation record for each active call.
 #### **Binary Search**
@@ -224,7 +221,7 @@ Linear search time: 4.01497650006786
 '''
 ```
 
-
+^34e100
 ## File systems
 
 The computer file system structure is recursive in nature: Where files and folders are nested arbitrary deep within a topmost folder/directory as deep as the computer memory allows. The OS operations on the file system also include recursive algos. One of such is a function that computes the disk space usage of each folder/file in a given file sys path. It includes the immediate space used by the Dir += the cumulative space used by all nested entries. An implementation is seen below:
@@ -327,3 +324,75 @@ O(n^2)
 $$
 - While this upper bound is technically true, it is not a tight upper bound. Remarkably, we can prove the stronger bound that the recursive algorithm for disk usage completes in ***O(n)*** time! The weaker bound was pessimistic because it assumed a worst-case number of entries for each directory. While it is possible that some directories contain a number of entries proportional to n, they cannot all contain that many. To prove the stronger claim, we choose to consider the overall number of iterations of the for loop across all recursive calls. We claim there are precisely n − 1 such iteration of that loop overall. We base this claim on the fact that each iteration of that loop makes a recursive call to disk usage, and yet we have already concluded that there are a total of n calls to disk usage (including the original call). We therefore conclude that there are ***O(n)*** recursive calls, each of which uses ***O(1)*** time outside the loop, and that the overall number of operations due to the loop is **O(n)**. Summing all of these bounds, the overall number of operations is **O(n)**.
 - The idea that we can sometimes get a tighter bound on a series of operations by considering the cumulative effect, rather than assuming that each achieves a worst case is a technique called **amortization**.
+
+#### More Notes:
+
+- To combat against infinite recursions, the designers of Python made an intentional decision to limit the overall number of function activations that can be simultaneously active. The precise value of this limit depends upon the Python distribution, but a typical default value is 1000. If this limit is reached, the Python interpreter raises a **RuntimeError** with a message, maximum recursion depth exceeded. Python’s artificial limit on the recursive depth could disrupt such otherwise legitimate computations.
+- Python interpreter can be dynamically reconfigured to change the default recursive limit. This is done through use of a module named sys, which supports a ***getrecursionlimit*** function and a ***setrecursionlimit***.
+
+```python
+import sys old = sys.getrecursionlimit( ) # perhaps 1000 is typical 
+sys.setrecursionlimit(1000000) # change to allow 1 million nested calls
+```
+
+- Types of recursion based on number of active recursion calls that may be started from within the body of a single activation.
+	- If a recursive call starts at most one other, we call this a ***linear recursion***.
+	- If a recursive call may start two others, we call this a ***binary recursion.***
+	- If a recursive call may start three or more others, this is ***multiple recursion***.
+- Examples of linear recursion: Ops on data sequences i.e. lists/arrays (like adding, reversing etc.) in **O(n)**, computing powers.
+
+***Computing powers***:
+- This involves raising a number x to an arbitrary nonnegative integer, n. For n > 0:
+$$
+x^n = x ·x^(n-1)
+$$
+- There are two ways to recursively implement this, each with diff perf.
+
+	**First**:
+	func power(x, n) => x^n
+	base case: if n = 0, power(x, n) = 1
+	for n > 0: power(x, n) = x * x ^ (n-1) => x * power(x, n-1)
+	
+	```python
+	def power(base: int, exp: int) -> int:
+	    if exp == 0:
+	        return 1
+	    else:
+	        return base * power(base, exp-1)
+	```
+
+	A recursive call to this version of power(x,n) runs in *O(n)* time. Its recursion trace shows the parameter n decreasing by one with each call, and constant work performed at each of n+1 levels.
+
+	**Second**:
+	A much faster/efficient way is to consider that for n that is even. Consider k = n // 2 or k = floor(n/2). (highest <), therefore n //2 = n/2 implying:
+$$
+	(x^k)^2 = (x^(n/2))^2 = x^n 
+$$
+	for odd floor(n/2) = (n-1)/2 i.e. floor(13/2) = 12/2 = 6, therefore
+$$
+		(x^k)^2 = (x^(n-1/2))^2 = x ·x^(n-1) 
+$$
+	Base case: if n = 0, power(x, n) = 1
+	n % 2 == 0 (even): (x^(n/2))^2 
+	n % 2 == 1 (odd): x * (x^(n/2))^2 
+	
+	```python
+	def f_power(base: int, expn: int) -> int:
+	    if expn == 0:
+	        return 1
+	    else:
+	        partial = f_power(base, expn//2)
+	        result = partial * partial
+	
+	        if expn % 2 == 1:
+	            return base * result
+	        return result
+```
+
+The size of the problem n reduces by at most half with each recursive call. Each individual activation of the function uses O(1) operations (excluding the recursive calls), We see that the amount of recursive calls is same as the num of times we reduce our sample size before getting to 1 which implies the recursive depth of *O(logn)*. This also means the memory usage is also *O(logn)*. (*O(logn)* activation records to be stored in memory).
+
+```shell
+Loop approach time: 0.03884080005809665
+Linear recursion approach time: 0.07637619995512068
+Improved Linear recursion approach time: 0.008094700053334236
+```

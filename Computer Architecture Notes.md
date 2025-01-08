@@ -76,8 +76,8 @@ Hence, we believe that the scale tilts slightly more towards RISC instructions. 
 - Multiple Instruction ISA: Single ISA are hard/stressful to implement, to ease the pain we can split the Single ISA into multiple ISA:
 	In any instruction set, we need at least three types of instructions:
 	1. We need arithmetic instructions to perform operations such as add, subtract, multiply, and divide. Most instruction sets also have specialized instructions in this category to perform logical operations such as logical OR and NOT.
-	2. [MOVE] We need data transfer instructions that can transfer values between memory locations and can load constants into memory locations.
-	3. [BRANCH] We need branch instructions that can start executing instructions at different points in the program based on the values of instruction operands
+	2. MOVE -  We need data transfer instructions that can transfer values between memory locations and can load constants into memory locations.
+	3. BRANCH - We need branch instructions that can start executing instructions at different points in the program based on the values of instruction operands
  
 - Summary of theoretical study of computers:
 	1. The problem of designing a complete ISA is the same as that of designing a universal machine. A universal machine can run any program. We can map each instruction in the ISA to an action in this universal machine. A universal machine is the most powerful computing machine known to man. If a universal machine cannot compute the result of a program because it never terminates (infinite loop), then all other computing machines are also guaranteed to fail for this program.
@@ -139,3 +139,83 @@ Simple structure of the stack based implementation: It is clearly visible that s
 3. Accumulator based Machines
 
 Accumulator based machines use a single register called an accumulator. Each instruction takes a single memory location as an input operand. For example, an add operation adds the value in the accumulator to the value in the memory address and then stores the result back in the accumulator. Early machines in the fifties that could not accommodate a register file used to have accumulators. Accumulators were able to reduce the number of memory accesses and speed up the program. Some aspects of accumulators have crept into the Intel x86 set of processors that are the most commonly used processors for desktops and laptops as of 2012. For multiplication and division of large numbers, these processors use the register eax as an accumulator. For other generic instructions, any register can be specified as an accumulator.
+
+
+## Bits
+
+- Bit: A variable that can have two values: 0 or 1.
+- Byte: A sequence of 8 bits.
+
+Binary variables can also be called Boolean variables based on an algebraic system of operations and operators introduced to describe digital electronic circuits inspired by the Boolean system of George Boole.
+
+- Boolean variable A variable that can take only two values – 0 or 1. 
+- Boolean algebra An algebraic system consisting of Boolean variables and some special operators defined on them.
+
+***Logical complements** : negation or NOT operator.*
+
+**Truth table**:  A table that lists the outputs of the Boolean operator for all possible combinations of inputs.
+
+*NOT operator* -> Let the logical complement of A be ~A. 
+TT 
+A | ~A
+0      1
+1      0
+If A = 1, ~A = 0 and if A = 0, ~A = 1.
+
+*OR operator* -> either A or B can be 1. It is represented by `v` or `+`
+i.e. A OR B = 1, if A = 1 and B = 0 or B = 1 and A = 0 or A = 1 and B = 1
+TT 
+A |   B  | A OR B
+0      0        0
+0      1        1
+1      0        1
+1      1        1
+
+*AND operator* -> Represented by `.` or `^` , both A and B has to be 1 or 0. Consider a problem where only one of A, B and C can be 1. This implies two conditions
+1. Only one of A, B and C can be 1.
+	~ A + B + C = 1. 
+1. No two variables can be 1 at the same time.
+	~ A.B + A.C + B.C = 0.
+TT 
+A |   B  | A AND B
+0      0        0
+0      1        0
+1      0        0
+1      1        1
+
+We can say that NOT, AND, and OR, are basic operators. We can now derive a set of operators from them.
+
+**Derived Operators**
+We can combine basic Boolean ops to get derived ops like NAND and NOR. NAND is the logical complement of AND while NOR is that of OR. NAND and NOR are very important operators because they are known as universal operators. We can use just the NAND operator or just the NOR operator to construct any other operator.
+TT for NAND
+A |   B  | A NAND B
+0      0        1
+0      1        1
+1      0        1
+1      1        0
+
+TT for NOR
+A |   B  | A NOR B
+0      0        1
+0      1        0
+1      0        0
+1      1        0
+
+*XOR or Exclusive-OR operator* -> This implies only one of A or B can have a binary value (1 or 0) at the same time. A XOR B is 1 if A = 1 and B = 0 or A = 0 and B = 1. Represented by ⊕. 
+A ⊕ B = A.~B + ~A.B 
+TT for XOR
+A |   B  | A XOR B
+0      0        0
+0      1        1
+1      0        1
+1      1        0
+### Rules 
+
+***NOT Operator*** 
+1. **Definition**: ~0 = 1, and ~1 = 0 –> This is the definition of the NOT operator. 
+2. **Double negation**:  ~~ A  = A –> The NOT of (NOT of A) is equal to A itself.
+
+***OR and AND Operators*** 
+1. **Identity**: A + 0 = A, and A.1 = A – If we compute the OR of a Boolean variable, A, with 0, or AND with 1, the result is equal to A.
+2. **Annulment**: A + 1 = 1, and A.0 = 0 – If we compute A OR 1, then the result is always equal to 1. Similarly, A AND 0, is always equal to 0 because the value of the second operand determines the final result.
+3. **Idempotence**: A + A = A, and A.A = A – The result of computing the OR or AND of A with itself, is A.
