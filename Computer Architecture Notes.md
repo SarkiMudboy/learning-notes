@@ -219,3 +219,157 @@ A |   B  | A XOR B
 1. **Identity**: A + 0 = A, and A.1 = A – If we compute the OR of a Boolean variable, A, with 0, or AND with 1, the result is equal to A.
 2. **Annulment**: A + 1 = 1, and A.0 = 0 – If we compute A OR 1, then the result is always equal to 1. Similarly, A AND 0, is always equal to 0 because the value of the second operand determines the final result.
 3. **Idempotence**: A + A = A, and A.A = A – The result of computing the OR or AND of A with itself, is A.
+4. **Complementarity**: A + ~A = 1, and A.~A = 0 – Either A = 1, or ~A = 1. In either case A + ~A will have one term, which is 1, and thus the result is 1. Similarly, one of the terms in A.~A is 0, and thus the result is 0.
+5. **Commutativity**: A.B = B.A, and A + B = B + A – The order of Boolean variables does not matter.
+6. **Associativity**: A + (B + C) = (A + B) + C, and A.(B.C) = (A.B).C – We are free to parenthesize expressions containing only OR or AND operators in any way we choose.
+7. **Distributivity**: A.(B + C) = A.B + A.C, and A + B.C = (A + B).(A + C) – We can use this law to open up a parenthesis and simplify expressions.
+
+**De Morgan's Law**
+
+1. ~(A + B) = ~A.~B -> (NOT of A OR B \[NOR] is equal to the AND of the complements of A and B).
+	TT
+	A | B | A + B | ~(A + B)          ->      ~A | ~B | ~A.~B
+	1    0      1             0                           0      1       0
+	0    1      1             0                           1      0       0
+
+2. ~(A.B) = ~A + ~B -> (NOT of A AND B \[NAND] is equal to the OR of the complements of A and B).
+	TT
+	A | B | A.B | ~(A.B)          ->      ~A | ~B | ~A + ~B
+	1    0      0      1                           0      1       1
+	0    1      0      1                           1      0       1
+
+***Logic Gates*** are devices that implement Boolean functions/formulae.
+
+Let us consider a Boolean function f with n arguments. 
+i.e. f(A,B,C) = A.B.~C + A.B.C + A.~B.C 
+This is gotten by getting Boolean expressions that evaluate to a logical 1 i.e.
+TT
+A | B | C | Result
+1   1    0     1
+1   1    1     1
+1   0    1     1
+This means for those variables equal to 0 are represented by their logical complements to resolve to 1 hence i.e. ~C and ~B.
+
+***minterm***:  A minterm is an AND function on all n Boolean variables, where each variable appears only once (either in its original form or in its complemented form). A minterm corresponds to one line in the truth table, whose result is 1. (ex. A.B.~C).
+***Canonical representation***: It is a Boolean formula, which is equivalent to the function f. It computes an OR operation of a set of minterms. (A.B.~C + A.B.C + A.~B.C).
+
+To implement Boolean functions using a truth table (Simple method), we first get a list of minterms that might evaluate to a logical 1 (true), then create a canonical representation, and then realize it with logic gates. To realize the canonical representation using logic gates, we need to realize each minterm separately, and then compute an OR operation.
+
+**Karnaugh Maps**: 
+
+A more efficient method is the Karnaugh map (K-Map). Steps to produce a K-Map include.
+1. Represent all minterms such that the order of variables in them is the same (original or complemented). 
+2. Second, if a variable is not complemented, then let us represent it by 1, otherwise, let us represent it by 0.
+3. Minterm Representation ~A.~B.~C - 000, ~A.~B.C - 001, ~A.B.~C - 010, A.~B.~C 100, ~A.B.C 011, A.~B.C 101, A.B.~C 110, A.B.C 111 which is representation of all the possible 8 minterms in a three variable function (2^3 = 8).
+4. Draw a 2X4 grid of squares. Depending on the num of bits (variable size), label the the rows with some bits (0 and 1) and use the rest to label the columns (i.e. 00, 01, 11 etc.). This allows the diff btw two adjacent cells (either row or columns) and columns/rows to be one variable/one bit.
+
+![Karnaugh map for our function](K_map.png)
+
+5. Now we can shade the original Boolean function out (f(A,B,C) = A.B.~C + A.B.C + A.~B.C ). Remember from our combinations, negated variables are represented with zero therefore f(A,B,C) = 110 + 111 + 101.
+
+**Simplifying our expression**:
+
+We can further simplify our expression in two ways:
+1. Combining two adjacent cells in the same column with diff in one variable ~C which has its original and complemented version in an OR expression => A.B.~C + A.B.C => A.B.~C + A.B.C = A.B.(C + ~C) = A.B.1 = A.B. Therefore => A.B + A.B.C
+2.  Combining two adjacent cells in the same row with diff in one variable ~B which has its original and complemented version in an OR expression => A.B.C + A.~B.C => A.~B.C + A.B.C = A.C.(B + ~B) = A.C.1 = A.C. Therefore => A.C + A.B.C
+
+
+### Positive Integers
+
+Computers are best suited to process values that are either 0 or 1. They find it difficult to process values from a larger set. Hence, representing numbers in base 2 should be a natural fit for computers.
+- A number system based on Indian numerals that uses a base equal to 2, is known as a *binary number system*. 
+- A number system based on Indian numerals that uses a base equal to 10, is known as a *decimal number system*.
+
+Formally, any number A can be represented as a sequence of n binary digits:
+
+$$
+\sum_{i=1}^{n} x_i *2^{i-1}
+$$
+The coefficients of the equation, are the binary digits. For example, the decimal number 23 is equal to 
+$$
+(16 + 4 + 2 + 1) = 1 × 2^4 + 0 × 2^3 + 1 × 2^2 + 1 × 2 + 1 
+$$ Thus, its binary representation is 10111.
+
+- MSB (Most Significant Bit) : The leftmost bit of a binary number. For example the MSB of 1110 is 1. 
+- LSB (Least Significant Bit) : The rightmost bit of a binary number. For example the LSB of 1110 is 0.
+
+#### Hexadecimal and Octal Numbers
+
+Numbers represented in base 8 are known as octal numbers. They are traditionally represented by adding a prefix, ’0’. The more popular representation is the hexadecimal number system. It uses a base equal to 16. Numbers in this format are prefixed by ‘0x’. Secondly, the word ‘hexadecimal’ is popularly abbreviated as ‘hex’. Note that we require 16 hex digits. We can use the digits 0-9 for the first ten digits. The next six digits require special characters. These six characters are typically – A (10), B(11), C(12), D(13), E(14), and F(15). We can use the lower case versions of ABCDEF also.
+
+To convert from binary to hex digits, we consider the following:
+
+$$
+\sum_{i=1}^{n} x_i *2^{i-1}
+$$
+
+$$
+\sum_{j=1}^{n/4} (2^3 * x_{4(j-1)+4} + 2^2 * x_{4(j-1)+3} * 2^1 * x_{4(j-1)+2} * x_{4(j-1)+1}) * 2^{4(j-1)})
+$$
+
+
+$$
+yj = (2^3 * x_{4(j-1)+4} + 2^2 * x_{4(j-1)+3} * 2^1 * x_{4(j-1)+2} * x_{4(j-1)+1})
+$$
+
+$$
+\sum_{j=1}^{n/4} yj*16^{j(i-1)}
+$$
+We can thus represent the number (A) in base 16 (hexadecimal notation) by creating groups of four consecutive binary digits. The first group is comprised of the binary digits 
+$$
+x4x3x2x1 
+$$
+the second group is comprised of 
+$$
+x8x7x6x5
+$$
+and so on. We need to convert each group of 4 binary digits, to represent a hexadecimal digit 
+*(yj)*.
+**Note**: We only multiply by *16^(j - 1)* when we want to convert from hex to decimal.
+Similarly, for converting a number from hex to binary, we need to replace each hex digit with a sequence of 4 binary digits.
+
+**Adding Bits**
+
+Adding bits is straight-forward and similar to adding decimals. The bits are added and the result consists of two bits 
+- The least significant bit (right most bit) sum and the 
+- Carry bit (C_out). 
+
+C_out is then carried over to the more significant bit to the left. It is now designated C_in for this bit and is added to the result of the addition of the two operands.
+
+TT for the sum
+
+A | B | (A + B)
+0    0     00
+1    0     01
+0    1     01
+1    1     10
+
+TT for all combo of A + B + C_in:
+
+0 + 0 +0 = 00
+0 + 1 + 0 = 01
+1 + 0 + 0 = 01
+1 + 1 + 0 = 10
+0 + 0 + 1 =  01
+0 + 1 +  1 = 10
+1 +  0 + 1 = 10
+1 + 1 + 1 = 11
+
+**Sizes Of Integers**
+
+Positive Integers -> Unsigned Integers
+- Short -> 2 bytes -> 16 bits (1 byte = 8 bits)
+- Int -> 4 bytes -> 32 bits
+- Long long int -> 8 bytes -> 64 bits
+The range of numbers a n-bit binary representation can hold is from 0 to $$ 2^n -1$$
+i.e. 16 => 2^16 - 1 = ??
+
+**Note**: smallest num is 0 i.e. all 16 bits are 0 and largest num has all bits as 1. Therefore 
+$$ 2^{15} + ... 2^0 = 2^{16} - 1 $$
+Sum of the nth term in a geometric series
+
+$$ S_n  = (a^r - 1)/(r-1)
+
+$$
+where n = 15, ratio (r) = * 2^1
+
