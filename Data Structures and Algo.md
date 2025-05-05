@@ -92,6 +92,23 @@ One additional comment concerning the functions above is in order. When discussi
 - ceil(x) = the smallest integer greater than or equal to x.
 
 
+## Asymptotic Analysis 
+
+In algorithm analysis, we focus on the growth rate of the running time as a function of the input size n, taking a “big-picture” approach. For example, it is often enough just to know that the running time of an algorithm grows proportionally to n. We analyze algorithms using a mathematical notation for functions that disregards constant factors. Namely, we characterize the running times of algorithms by using functions that map the size of the input, n, to values that correspond to the main factor that determines the growth rate in terms of n. This approach reflects that each basic step in a pseudo-code description or a high-level language implementation may correspond to a small number of primitive operations. Thus, we can perform an analysis of an algorithm by estimating the number of primitive operations executed up to a constant factor, rather than getting bogged down in language-specific or hardware-specific analysis of the exact number of operations that execute on the computer.
+
+
+Let f(n) and g(n) be functions mapping positive integers to positive real numbers. We say that **f(n)** is **O(g(n))** if there is a real constant **c > 0** and an integer constant n0 ≥ 1 such that 
+$$
+f(n) ≤ cg(n), 
+$$
+for n ≥ n0. This definition is often referred to as the “big-Oh” notation, for it is sometimes pronounced as “ ***f(n) is big-Oh of g(n)***.”
+
+The big-Oh notation allows us to say that a function f(n) is “*less than or equal to*” another function g(n) up to a constant factor and in the asymptotic sense as n grows toward infinity. This ability comes from the fact that the definition uses “≤” to compare f(n) to a g(n) times a constant, c, for the asymptotic cases when n ≥ n0.
+
+### Big Omega
+
+The Big Omega Notation allows us to say that a function is greater than or equal to another function
+
 ### CHAPTER 2: Recursion
 
 Recursion is a technique by which a function makes one or more calls to itself during execution, or by which a data structure relies upon smaller instances of the very same type of structure in its representation.
@@ -397,3 +414,7 @@ Linear recursion approach time: 0.07637619995512068
 Improved Linear recursion approach time: 0.008094700053334236
 ```
 
+
+## Notes
+
+**Heap Queue Implementation in python** [heapq](https://docs.python.org/3/library/heapq.html)

@@ -317,11 +317,11 @@ $$
 $$
 We can thus represent the number (A) in base 16 (hexadecimal notation) by creating groups of four consecutive binary digits. The first group is comprised of the binary digits 
 $$
-x4x3x2x1 
+x_4x_3x_2x_1 
 $$
 the second group is comprised of 
 $$
-x8x7x6x5
+x_8x_7x_6x_5
 $$
 and so on. We need to convert each group of 4 binary digits, to represent a hexadecimal digit 
 *(yj)*.
@@ -371,5 +371,5 @@ Sum of the nth term in a geometric series
 $$ S_n  = (a^r - 1)/(r-1)
 
 $$
-where n = 15, ratio (r) = * 2^1
+where n = 15, geometric ratio (r) = * 2^1
 
