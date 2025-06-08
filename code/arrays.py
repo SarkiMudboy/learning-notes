@@ -2,7 +2,7 @@
 import sys
 from array import array
 import ctypes
-from typing import Any
+from typing import Any, List, Dict, Optional
 
 
 def test_size_of_list(n: int) -> None:
@@ -106,10 +106,27 @@ class DynamicArray:
         self._A[self._n] = obj
         self._n += 1
 
-    def _resize(self, capacity: int) -> None:
+    def insert(self, k: int, val: int) -> None:
+        """Insert a value at index k. k is of the range 0 <= k <= n"""
+        if self._n == self._capacity:
+            self._resize(self._capacity * 2, k)
+
+        # for j in range(self._n, k, -1):
+        #     self._A[j] = self._A[j - 1]
+        self._A[k] = val
+        self._n += 1
+
+    def _resize(self, capacity: int, offset_loc: Optional[int] = None) -> None:
+        """Offset defines shift during the initialization operation on the array"""
 
         B = self._make_array(capacity)
-        for j in range(self._n):
+
+        if offset_loc:
+            for j in range(self._n, offset_loc, -1):
+                print(self._A[13])
+                self._B[j] = self._A[j - 1]
+        k = offset_loc if offset_loc else self._n
+        for j in range(0, k):
             B[j] = self._A[j]
         self._A = B
         self._capacity = capacity
@@ -120,13 +137,38 @@ class DynamicArray:
     def get_array(self):
         return self._A
 
+    def stats(self) -> Dict[str, Any]:
+
+        return {
+            "length": self._n,
+            "cap": self._capacity,
+        }
+
+
+def safe_loop(d: ctypes.py_object) -> None:
+    try:
+        for i in d:
+            print(i)
+    except ValueError:
+        pass
+
 
 if __name__ == "__main__":
 
     d = DynamicArray()
     for i in range(10):
         d.append(i)
-    print(d[-1])
+    arr = d.get_array()
+
+    start = 55
+    print(d.stats())
+    safe_loop(arr)
+    print("\n")
+    for x in range(20):
+        d.insert(2, start)
+        start += 1
+    print(d.stats())
+    safe_loop(arr)
 
 
 def test_size_of_d_array(n: int) -> None:
