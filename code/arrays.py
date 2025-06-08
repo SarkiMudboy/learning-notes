@@ -110,24 +110,22 @@ class DynamicArray:
         """Insert a value at index k. k is of the range 0 <= k <= n"""
         if self._n == self._capacity:
             self._resize(self._capacity * 2, k)
+        else:
+            for j in range(self._n, k, -1):
+                self._A[j] = self._A[j - 1]
 
-        # for j in range(self._n, k, -1):
-        #     self._A[j] = self._A[j - 1]
         self._A[k] = val
         self._n += 1
 
-    def _resize(self, capacity: int, offset_loc: Optional[int] = None) -> None:
-        """Offset defines shift during the initialization operation on the array"""
+    def _resize(self, capacity: int, shift_loc: Optional[int] = None) -> None:
 
         B = self._make_array(capacity)
 
-        if offset_loc:
-            for j in range(self._n, offset_loc, -1):
-                print(self._A[13])
-                self._B[j] = self._A[j - 1]
-        k = offset_loc if offset_loc else self._n
-        for j in range(0, k):
-            B[j] = self._A[j]
+        for j in range(self._n):
+            if shift_loc and j >= shift_loc:
+                B[j + 1] = self._A[j]
+            else:
+                B[j] = self._A[j]
         self._A = B
         self._capacity = capacity
 
@@ -167,8 +165,9 @@ if __name__ == "__main__":
     for x in range(20):
         d.insert(2, start)
         start += 1
+        # print(d[2], x)
     print(d.stats())
-    safe_loop(arr)
+    safe_loop(d.get_array())
 
 
 def test_size_of_d_array(n: int) -> None:
