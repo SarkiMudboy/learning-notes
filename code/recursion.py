@@ -1,7 +1,7 @@
 import math
 import os
 
-from typing import Any, Generator, List, Literal, Sequence, Tuple
+from typing import Any, Generator, Iterable, List, Literal, Sequence, Tuple
 
 hex = {"10": "A", "11": "B", "12": "C", "13": "D", "14": "E", "15": "F"}
 
@@ -385,6 +385,36 @@ def find_pair_sum(S: List[int], k: int, left: int, right: int):
     return find_pair_sum(S, k, left + 1, right - 1)
 
 
+def find_max_pair(S: Sequence):
+    def helper(
+        S: Iterable,
+        k: int,
+        left: int,
+        right: int,
+        max_left: int,
+        max_right: int,
+    ) -> Tuple[int]:
+
+        if left == max_right or right == max_left:
+            return (S[max_left], S[max_right], k)
+
+        max_left = left if S[left] > S[max_left] else max_left
+        max_right = right if S[right] > S[max_right] else max_right
+
+        k = S[max_left] + S[max_right]
+
+        return helper(S, k, left + 1, right - 1, max_left, max_right)
+
+    return helper(S, 0, 0, len(S) - 1, 0, len(S) - 1)
+
+
+if __name__ == "__main__":
+    # sq = [1, 2, 8, 0, 4, 3, 9, 5]
+    sq = [4, 6, 2, 8, 11, 3, 0]
+    m = find_max_pair(sq)
+    print(m)
+
+
 # gen by chatgpt
 def find_pair_sum_k_gpt(S, k):
     def helper(left, right):
@@ -539,10 +569,10 @@ def dir_walk(path: str) -> Generator[tuple[str, list, list], Any, None]:
     yield (path, dirs, files)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    # for path in os.walk(r"C:\Users\ihima\Documents\golang-practice"):
-    #     print(path)
+# for path in os.walk(r"C:\Users\ihima\Documents\golang-practice"):
+#     print(path)
 
-    for path in dir_walk(r"C:\Users\ihima\Documents\golang-practice"):
-        print(path)
+# for path in dir_walk(r"C:\Users\ihima\Documents\golang-practice"):
+#     print(path)
