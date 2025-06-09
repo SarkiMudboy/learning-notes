@@ -142,6 +142,17 @@ class DynamicArray:
             "cap": self._capacity,
         }
 
+    def __str__(self) -> str:
+        "string representation of the underlying array"
+        array = []
+        try:
+            for i in d:
+                array.append(str(i))
+        except ValueError:
+            pass
+
+        return ", ".join(array)
+
 
 def safe_loop(d: ctypes.py_object) -> None:
     try:
@@ -160,14 +171,15 @@ if __name__ == "__main__":
 
     start = 55
     print(d.stats())
-    safe_loop(arr)
-    print("\n")
+    print(d)
+    # print("\n")
+
     for x in range(20):
         d.insert(2, start)
         start += 1
-        # print(d[2], x)
+
     print(d.stats())
-    safe_loop(d.get_array())
+    print(d)
 
 
 def test_size_of_d_array(n: int) -> None:
