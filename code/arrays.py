@@ -18,6 +18,10 @@ def test_size_of_list(n: int) -> None:
         data.append(None)
 
 
+if __name__ == "__main__":
+    test_size_of_list(20)
+
+
 def test_size_limits(n: int) -> None:
 
     data = []
@@ -97,7 +101,6 @@ class DynamicArray:
         2. Set B[i] = A[i], for i = 0, . . . , n − 1, where n denotes current number of items.
         3. Set A = B, that is, we henceforth use B as the array supporting the list.
         4. Insert the new element in the new array.
-
         """
 
         if self._n == self._capacity:
@@ -144,10 +147,10 @@ class DynamicArray:
 
     def __str__(self) -> str:
         "string representation of the underlying array"
-        array = []
+        array = [None] * self._n
         try:
-            for i in d:
-                array.append(str(i))
+            for i in range(self._n):
+                array[i] = str(self._A[i])
         except ValueError:
             pass
 
@@ -162,24 +165,24 @@ def safe_loop(d: ctypes.py_object) -> None:
         pass
 
 
-if __name__ == "__main__":
-
-    d = DynamicArray()
-    for i in range(10):
-        d.append(i)
-    arr = d.get_array()
-
-    start = 55
-    print(d.stats())
-    print(d)
-    # print("\n")
-
-    for x in range(20):
-        d.insert(2, start)
-        start += 1
-
-    print(d.stats())
-    print(d)
+# if __name__ == "__main__":
+#
+# d = DynamicArray()
+# for i in range(10):
+#     d.append(i)
+# arr = d.get_array()
+#
+# start = 55
+# print(d.stats())
+# print(d)
+# # print("\n")
+#
+# for x in range(20):
+#     d.insert(2, start)
+#     start += 1
+#
+# print(d.stats())
+# print(d)
 
 
 def test_size_of_d_array(n: int) -> None:
