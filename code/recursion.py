@@ -1,6 +1,7 @@
 import math
 import os
 
+
 from typing import Any, Generator, Iterable, List, Literal, Sequence, Tuple
 
 hex = {"10": "A", "11": "B", "12": "C", "13": "D", "14": "E", "15": "F"}
@@ -8,7 +9,6 @@ hex = {"10": "A", "11": "B", "12": "C", "13": "D", "14": "E", "15": "F"}
 
 # implement the binary to hex function
 def four_bit_binary_to_decimal(binary: str) -> int:
-
     total: int = 0
     index: int = 0
 
@@ -19,7 +19,6 @@ def four_bit_binary_to_decimal(binary: str) -> int:
 
 
 def binary_to_hex(binary_num: str, to_decimal=False) -> str:
-
     n = len(binary_num) // 4
     total = "0x"
     total_decimal = 0
@@ -96,8 +95,12 @@ def find_log(n: int):
         return 1 + find_log(n // 2)
 
 
-def my_find_log(n: int, t: int) -> int:
+if __name__ == "__main__":
+    result = find_log(256)
+    print(result)
 
+
+def my_find_log(n: int, t: int) -> int:
     if n <= 1.0:
         return t
 
@@ -119,7 +122,6 @@ def unique(S: Sequence, j: int):
 
 
 def parent_unique(S: Sequence, j: int):
-
     if j == len(S) - 1:
         return False
 
@@ -137,9 +139,7 @@ Position = Literal["a"] | Literal["b"] | Literal["c"]
 
 
 class Tower:
-
     def __init__(self, num: int) -> None:
-
         if num <= 0:
             raise ValueError("Invalid disc size")
 
@@ -163,7 +163,6 @@ class Tower:
             raise ValueError("Cannot stack in descending order")
 
     def move_top_stack(self, to_peg: Position) -> None:
-
         for _ in self._pegs[self._current_stack][:-1]:
             self.move_disc(self._current_stack, to_peg)
 
@@ -183,7 +182,6 @@ class Tower:
 
 
 def find_subsets(s: Sequence, subsets: List[Any]) -> List[Any]:
-
     n = len(s)
 
     if n == 1:
@@ -217,7 +215,6 @@ test = ["a", "b", "c", "d"]
 
 
 def num_to_bin(num: int, result: int) -> str:
-
     if num == 1:
         result += "1"
         return reverse_string(result, 0, len(result) - 1)
@@ -228,12 +225,10 @@ def num_to_bin(num: int, result: int) -> str:
 
 
 def reverse_string(word: str, first: int, last: int) -> str:
-
     if last - first <= 0:
         return word
 
     else:
-
         fw = word[first]
         word = word[:first] + word[last] + word[first + 1 :]
         word = word[:last] + fw + word[last + 1 :]
@@ -254,7 +249,6 @@ def eff_reverse(s: str):
 
 
 def is_palindrome(s: str) -> bool:
-
     if len(s) <= 1:
         return True
 
@@ -268,7 +262,6 @@ def is_palindrome(s: str) -> bool:
 
 
 def more_vowels(s: str, count: int, index: int) -> bool:
-
     if len(s) == index:
         return False
 
@@ -319,7 +312,6 @@ def rearrange_for_k(seq, k):
 
 
 def sort_around_k(S: List[int], k) -> List[int]:
-
     if len(S) <= 1:
         return S
 
@@ -342,9 +334,7 @@ def sort_around_k(S: List[int], k) -> List[int]:
         )
 
 
-def partition_in_place_sort(
-    S: List[int], k: int, left: int, right: int
-) -> List[int]:
+def partition_in_place_sort(S: List[int], k: int, left: int, right: int) -> List[int]:
     print("call")
     if left >= right:
         return S
@@ -394,7 +384,6 @@ def find_max_pair(S: Sequence):
         max_left: int,
         max_right: int,
     ) -> Tuple[int]:
-
         if left == max_right or right == max_left:
             return (S[max_left], S[max_right], k)
 
@@ -408,11 +397,11 @@ def find_max_pair(S: Sequence):
     return helper(S, 0, 0, len(S) - 1, 0, len(S) - 1)
 
 
-if __name__ == "__main__":
-    # sq = [1, 2, 8, 0, 4, 3, 9, 5]
-    sq = [4, 6, 2, 8, 11, 3, 0]
-    m = find_max_pair(sq)
-    print(m)
+# if __name__ == "__main__":
+#     # sq = [1, 2, 8, 0, 4, 3, 9, 5]
+#     sq = [4, 6, 2, 8, 11, 3, 0]
+#     m = find_max_pair(sq)
+#     print(m)
 
 
 # gen by chatgpt
@@ -439,7 +428,6 @@ arr = [1, 4, 8, 9, 11, 15, 20]
 
 
 def binary_search(S: List[int], k: int, high: int, low: int) -> int:
-
     if low - high <= 0:
         return False
 
@@ -455,7 +443,6 @@ def binary_search(S: List[int], k: int, high: int, low: int) -> int:
 
 
 def iter_power(base: int, x: int) -> int:
-
     if x == 0:
         return 1
 
@@ -474,13 +461,10 @@ def iter_power(base: int, x: int) -> int:
 
 
 def test_puzzle(seq: List[int], excluded: int, puzzle: List[str] = []):
-
     sums = ["pot + pan = bib", "dog + cat = pig", "boy + girl = baby"]
 
 
-def PuzzleSolve(
-    S: list[int], k: int, U: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-):
+def PuzzleSolve(S: list[int], k: int, U: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]):
     """
     Solves a summation puzzle by computing an enumeration of all k-length extensions to S using elements in U without repetitions
 
@@ -492,7 +476,6 @@ def PuzzleSolve(
 
     current_excluded = None
     for e, i in enumerate(U):
-
         S.append(e)
         U.pop(i)
         current_excluded = i
@@ -523,7 +506,6 @@ def r_draw_iterval(center_length):
 
 
 def draw_line(tick_length: int, tick_label: str = "") -> None:
-
     line = "-" * tick_length
     if tick_label:
         line += " " + tick_label
@@ -531,7 +513,6 @@ def draw_line(tick_length: int, tick_label: str = "") -> None:
 
 
 def draw_interval(center_length) -> None:
-
     num_of_lines = int(math.pow(2, center_length) - 1)
     for counter in range(num_of_lines):
         counter_bin = bin(counter)[2:]
@@ -540,7 +521,6 @@ def draw_interval(center_length) -> None:
 
 
 def draw_ruler(num_of_inches: int, major_length: int) -> None:
-
     draw_line(major_length, "0")
     for j in range(1, num_of_inches):
         draw_interval(major_length - 1)

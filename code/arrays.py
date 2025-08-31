@@ -3,6 +3,7 @@ import sys
 from array import array
 import ctypes
 from typing import Any, List, Dict, Optional
+from time import time
 
 
 def test_size_of_list(n: int) -> None:
@@ -18,12 +19,7 @@ def test_size_of_list(n: int) -> None:
         data.append(None)
 
 
-if __name__ == "__main__":
-    test_size_of_list(20)
-
-
 def test_size_limits(n: int) -> None:
-
     data = []
     init_size = sys.getsizeof(data)
     prev_size = init_size
@@ -41,7 +37,6 @@ def test_size_limits(n: int) -> None:
 
 
 def test_list_shrinkage(n: int) -> None:
-
     init_list = [None] * n
 
     for _ in range(n + 1):
@@ -50,13 +45,6 @@ def test_list_shrinkage(n: int) -> None:
         print("Length: {0:3d}; Size in bytes: {1:4d}".format(length, size))
         if length > 0:
             init_list.pop()
-
-
-# if __name__ == "__main__":
-
-# test_size_of_list(20)
-# test_size_limits(20)
-# test_list_shrinkage(30)
 
 
 def test_size_of_array(n: int) -> None:
@@ -121,7 +109,6 @@ class DynamicArray:
         self._n += 1
 
     def _resize(self, capacity: int, shift_loc: Optional[int] = None) -> None:
-
         B = self._make_array(capacity)
 
         for j in range(self._n):
@@ -139,7 +126,6 @@ class DynamicArray:
         return self._A
 
     def stats(self) -> Dict[str, Any]:
-
         return {
             "length": self._n,
             "cap": self._capacity,
@@ -165,26 +151,6 @@ def safe_loop(d: ctypes.py_object) -> None:
         pass
 
 
-# if __name__ == "__main__":
-#
-# d = DynamicArray()
-# for i in range(10):
-#     d.append(i)
-# arr = d.get_array()
-#
-# start = 55
-# print(d.stats())
-# print(d)
-# # print("\n")
-#
-# for x in range(20):
-#     d.insert(2, start)
-#     start += 1
-#
-# print(d.stats())
-# print(d)
-
-
 def test_size_of_d_array(n: int) -> None:
     """Similar experiment for the custom dynamic array"""
     # args: n -> Length of array
@@ -203,7 +169,6 @@ def test_size_of_d_array(n: int) -> None:
 def InsertionSort(A: list) -> list:
     """Sort list of comparable elements into increasing order"""
     for k in range(1, len(A)):
-
         curr = A[k]
         j = k
         while j > 0 and A[j - 1] > curr:
@@ -237,7 +202,6 @@ class CaesarCipher:
         return self._transform(secret, self._backwards)
 
     def _transform(self, text: str, code: str) -> str:
-
         msg = list(text)
         for k in range(len(msg)):
             if msg[k].isupper():
@@ -247,11 +211,92 @@ class CaesarCipher:
         return "".join(msg)
 
 
-# if __name__ == "__main__":
-#
-#     cipher = CaesarCipher(3)
-#     message = "THIS IS THE PASSWORD: PASSWORD"
-#     coded = cipher.encrypt(message)
-#     print("Secret:", coded)
-#     answer = cipher.decrypt(coded)
-#     print("Message:", answer)
+def find_duplicate(S: List[int]) -> Optional[int]:
+    count = 0
+    for n in range(0, len(S)):
+        for i in range(n + 1, len(S)):
+            count += 1
+            if S[n] == S[i]:
+                print(count)
+                return S[n]
+    print(count)
+    return None
+
+
+def find_cycle(A: List):
+    """
+    Cycle Detection (Floyd’s Tortoise and Hare) Algorithm:
+    A fast algorithm for finding the integer in A that is repeated in an
+    array of size n ≥ 2 containing  integers from 1 to n − 1, inclusive.
+    Time complexity = O(n) single scan
+    Space complexity = O(1) only storing pointers
+    see https://en.wikipedia.org/wiki/Cycle_detection#Floyd's_tortoise_and_hare
+    """
+    # create two pointers
+    slow = A[0]
+    fast = A[0]
+
+    # phase 1: Detect cycle (like in linked list)
+    while True:
+        slow = A[slow]
+        fast = A[A[fast]]
+        print(slow, fast)
+
+        if slow == fast:
+            break
+
+    # phase 2: find entrance into the cycle (i.e repeated number)
+    slow = A[0]
+    while slow != fast:
+        slow = A[slow]
+        fast = A[fast]
+        print(slow, fast)
+
+    lam = 1
+    fast = A[slow]
+    while slow != fast:
+        fast = A[fast]
+        lam += 1
+
+    print(lam)
+    return slow
+
+
+def compute_average():
+
+    sizes = [10, 100, 1000, 10_000]
+
+    for size in sizes:
+
+        indices = [0, size // 2, size - 1]
+
+        array = [None] * size
+
+        for k in indices:
+
+            loop_array = array[:]
+
+            start = time()
+
+            for i in range(size):
+
+                try:
+
+                    loop_array.pop(k)
+
+                except IndexError:
+
+                    break
+
+            end = time()
+
+            av = (end - start) / size
+
+            print(
+                f"Array length = {size}, index popped = {k}, Average time per pop op = {av * 1000}"
+            )
+
+
+if __name__ == "__main__":
+
+    compute_average()
