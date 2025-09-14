@@ -4,6 +4,7 @@ from array import array
 import ctypes
 from typing import Any, List, Dict, Optional
 from time import time
+import random
 
 
 def test_size_of_list(n: int) -> None:
@@ -11,12 +12,80 @@ def test_size_of_list(n: int) -> None:
     based upon such a strategy of dynamic arrays
     args: n -> Length of array"""
 
-    data = []
+    data = [None, None, None, None, None, None, None]
     for _ in range(n):
         length = len(data)
         s = sys.getsizeof(data)
         print("Length: {0:3d}; Size in bytes: {1:4d}".format(length, s))
         data.append(None)
+
+
+"""
+empty array = []
+Length:   0; Size in bytes:   56
+Length:   1; Size in bytes:   88
+Length:   2; Size in bytes:   88
+Length:   3; Size in bytes:   88
+Length:   4; Size in bytes:   88
+Length:   5; Size in bytes:  120
+Length:   6; Size in bytes:  120
+Length:   7; Size in bytes:  120
+Length:   8; Size in bytes:  120
+Length:   9; Size in bytes:  184
+------------------------------------
+3-item array 
+
+Length:   3; Size in bytes:   88
+Length:   4; Size in bytes:   88
+Length:   5; Size in bytes:  120
+Length:   6; Size in bytes:  120
+Length:   7; Size in bytes:  120
+Length:   8; Size in bytes:  120
+Length:   9; Size in bytes:  184
+Length:  10; Size in bytes:  184
+Length:  11; Size in bytes:  184
+Length:  12; Size in bytes:  184
+----------------------------------
+
+104 - 
+
+5-item array 
+Length:   0; Size in bytes:  56
+Length:   1; Size in bytes:  104
+Length:   2; Size in bytes:  104
+Length:   3; Size in bytes:  104
+Length:   4; Size in bytes:  104
+
+
+Length:   5; Size in bytes:  104
+Length:   6; Size in bytes:  104
+Length:   7; Size in bytes:  152
+Length:   8; Size in bytes:  152
+Length:   9; Size in bytes:  152
+Length:  10; Size in bytes:  152
+Length:  11; Size in bytes:  152
+Length:  12; Size in bytes:  152
+Length:  13; Size in bytes:  216
+Length:  14; Size in bytes:  216
+Length:  15; Size in bytes:  216
+Length:  16; Size in bytes:  216
+Length:  17; Size in bytes:  216
+Length:  18; Size in bytes:  216
+Length:  19; Size in bytes:  216
+Length:  20; Size in bytes:  216
+Length:  21; Size in bytes:  280
+Length:  22; Size in bytes:  280
+Length:  23; Size in bytes:  280
+Length:  24; Size in bytes:  280
+Length:  25; Size in bytes:  280
+Length:  26; Size in bytes:  280
+
+"""
+
+
+# if __name__ == "__main__":
+#
+#     test_size_of_list(27)
 
 
 def test_size_limits(n: int) -> None:
@@ -185,15 +254,16 @@ class CaesarCipher:
     """Implementation for the oldest crypto scheme - Caesar cipher"""
 
     def __init__(self, shift: int) -> None:
-        encoder = [None] * 26
-        decoder = [None] * 26
 
-        for c in range(26):
-            encoder[c] = chr(((c + shift) % 26) + ord("A"))
-            decoder[c] = chr(((c - shift) % 26) + ord("A"))
+        self._forwards = "".join(
+            [chr(((c + shift) % 26) + ord("A")) for c in range(26)]
+        )
+        self._backwards = "".join(
+            [chr(((c - shift) % 26) + ord("A")) for c in range(26)]
+        )
 
-        self._forwards = "".join(encoder)
-        self._backwards = "".join(decoder)
+        print("Characters (encoding): ", self._forwards)
+        print("Characters (decoding): ", self._backwards)
 
     def encrypt(self, message: str) -> str:
         return self._transform(message, self._forwards)
@@ -209,6 +279,58 @@ class CaesarCipher:
                 msg[k] = code[j]
 
         return "".join(msg)
+
+
+class CaesarCipherUTF:
+    """Implementation for the oldest crypto scheme - Caesar cipher for any charcter set in the UTF-8 charset"""
+
+    def __init__(self, shift: int, first_letter: str, size: int) -> None:
+        encoder = [None] * size
+        decoder = [None] * size
+
+        for c in range(size):
+            encoder[c] = chr(((c + shift) % size) + ord(first_letter))
+            decoder[c] = chr(((c - shift) % size) + ord(first_letter))
+
+        self._forwards = "".join(encoder)
+        self._backwards = "".join(decoder)
+        print("Characters (encoding): ", self._forwards)
+        print("Characters (decoding): ", self._backwards)
+
+    def encrypt(self, message: str) -> str:
+        return self._transform(message, self._forwards)
+
+    def decrypt(self, secret: str) -> str:
+        return self._transform(secret, self._backwards)
+
+    def _transform(self, text: str, code: str) -> str:
+        msg = list(text)
+        for k in range(len(msg)):
+            j = ord(msg[k]) - ord("α")
+            msg[k] = code[j]
+
+        return "".join(msg)
+
+
+# if __name__ == "__main__":
+#     cipherEnglish = CaesarCipher(3)
+#     plaintext = "THE EAGLE IS IN PLAY; MEET AT JOE S."
+#     ciphertext = cipherEnglish.encrypt(plaintext)
+#     print(f"Text: {plaintext}\nsecret: {ciphertext}")
+#     d = cipherEnglish.decrypt(ciphertext)
+#
+#     print(f"decrypted: {d}")
+#
+# cipherUTF = CaesarCipherUTF(3, "α", 25)
+# plaintext = "ρθε"
+# ciphertext = cipherUTF.encrypt(plaintext)
+#
+# print(f"Text: {plaintext}\nsecret: {ciphertext}")
+
+
+#  the first letter of the lang
+# how many characters are in the chrset
+# shift as usual
 
 
 def find_duplicate(S: List[int]) -> Optional[int]:
@@ -297,6 +419,66 @@ def compute_average():
             )
 
 
+def array_sum2(data: list):
+    """
+    built-in sum function can be combined with Python’s
+    comprehension syntax to compute the sum of all numbers in an n × n data
+    set, represented as a list of lists.
+    """
+    if isinstance(data, list):
+        return sum([array_sum2(data[i]) for i in range(len(data))])
+    else:
+        return data
+
+
+def arraySum(data: list):
+
+    total = (
+        sum([arraySum(data[i]) for i in range(2)])
+        if isinstance(data, list)
+        else sum([i for i in data])
+    )
+    return total
+
+
+def array_sum(data: list) -> int:
+    """
+    Using standard control structures to compute the sum of all numbers in an
+    n × n data set, represented as a list of lists.
+    """
+    total = 0
+
+    for i in range(len(data)):
+        if isinstance(data[i], int):
+            total += data[i]
+        elif isinstance(data[i], list):
+            total += array_sum2(data[i])
+        else:
+            raise ValueError("invalid input")
+
+    return total
+
+
+def shuffle(data: List[Any]) -> List[Any]:
+    """Custom shuffle function that rearranges a list so that every possible ordering is equally likely."""
+    index = 0
+    shuffled_data = [None for _ in range(len(data))]
+
+    while index < len(shuffled_data):
+
+        i = random.randrange(0, len(data))
+
+        if data[i] not in shuffled_data:
+            shuffled_data[index] = data[i]
+            index += 1
+
+    return shuffled_data
+
+
 if __name__ == "__main__":
 
-    compute_average()
+    data = [6, 3, 8, 1, 4, 2]
+
+    new_data = shuffle(data)
+
+    print(new_data)

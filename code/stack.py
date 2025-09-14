@@ -57,12 +57,8 @@ def reverse_file(file: str, out: str) -> None:
 
 def main():
 
-    parser = argparse.ArgumentParser(
-        description="A CLI app for peeking at text files"
-    )
-    parser.add_argument(
-        "-f", "--file", help="File to peek", default="results.txt"
-    )
+    parser = argparse.ArgumentParser(description="A CLI app for peeking at text files")
+    parser.add_argument("-f", "--file", help="File to peek", default="results.txt")
     args = parser.parse_args()
 
     file = open(args.file, "r")
