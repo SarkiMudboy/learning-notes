@@ -10,8 +10,9 @@ class Empty(Exception):
 
 class ArrayStack:
 
-    def __init__(self) -> None:
-        self._stack = []
+    def __init__(self, init: int = 0) -> None:
+
+        self._stack = [] if not init else [i for i in range(init)]
 
     def __len__(self) -> int:
         return len(self._stack)
@@ -39,6 +40,17 @@ class ArrayStack:
     def __str__(self) -> str:
 
         return str(self._stack)
+
+    def clear(self) -> None:
+        """
+        R-6.4 Give a recursive method for removing all the elements from a stack.
+        """
+
+        if len(self) == 0:
+            return
+
+        self.pop()
+        return self.clear()
 
 
 def reverse_file(file: str, out: str) -> None:
@@ -86,9 +98,9 @@ def main():
         print(Down.top())
 
 
-if __name__ == "__main__":
-    main()
-    # reverse_file("oop.py", "results.txt")
+# if __name__ == "__main__":
+#     main()
+# reverse_file("oop.py", "results.txt")
 
 
 def test_stack():
@@ -117,3 +129,54 @@ def test_stack():
     print(S.pop())  # contents: [7, 9]; outputs 4
     S.push(6)  # contents: [7, 9, 6]
     print(S)
+
+
+def transfer(S: ArrayStack, T: ArrayStack) -> None:
+    """
+    Implement a function with signature transfer(S, T) that transfers all ele-
+    ments from stack S onto stack T, so that the element that starts at the top
+    of S is the first to be inserted onto T, and the element at the bottom of S
+    ends up at the top of T.
+
+    Args:
+        S: ArrayStack -> The source Stack for transfer
+        T: ArrayStack The destination stack for transfer
+    Returns:
+        None
+
+    """
+    print(S.top())
+    for _ in range(len(S)):
+
+        T.push(S.pop())
+
+    print(T)
+
+
+def reverse_list(data: list) -> list:
+    """
+    Implement a function that reverses a list of elements by pushing them onto
+    a stack in one order, and writing them back to the list in reversed order.
+
+    Args:
+        data: list -> initial array
+
+    Returns:
+        list: reversed list
+    """
+
+    s = ArrayStack()
+    for item in data:
+        s.push(item)
+
+    reversed = []
+    for i in range(len(s)):
+        reversed.append(s.pop())
+
+    return reversed
+
+
+if __name__ == "__main__":
+
+    arr = [2, 3, 4, 5, 6, 7, 8, 9]
+    print(reverse_list(arr))
