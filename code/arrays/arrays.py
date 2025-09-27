@@ -106,6 +106,11 @@ def test_size_limits(n: int) -> None:
 
 
 def test_list_shrinkage(n: int) -> None:
+    """
+    Modify the experiment from Code Fragment 5.1 in order to demonstrate
+    that Python’s list class occasionally shrinks the size of its underlying array
+    when elements are popped from a list.
+    """
     init_list = [None] * n
 
     for _ in range(n + 1):
@@ -131,7 +136,7 @@ def test_size_of_array(n: int) -> None:
 # test_size_of_array(20)
 
 
-class DynamicArray:
+class DynamicArray1:
     """An implementation of dynamic array similar to the python list"""
 
     def __init__(self) -> None:
@@ -220,19 +225,24 @@ def safe_loop(d: ctypes.py_object) -> None:
         pass
 
 
+def log_array():
+    d = DynamicArray1()
+    for _ in range(50):
+        d.append(None)
+    safe_loop(d)
+    print(sys.getsizeof(d.get_array()))
+
+
 def test_size_of_d_array(n: int) -> None:
     """Similar experiment for the custom dynamic array"""
     # args: n -> Length of array
 
-    data = DynamicArray()
+    data = DynamicArray1()
     for _ in range(n):
         length = len(data)
         s = sys.getsizeof(data.get_array())
         print("Length: {0:3d}; Size in bytes: {1:4d}".format(length, s))
         data.append(0)
-
-
-# test_size_of_d_array(20)
 
 
 def InsertionSort(A: list) -> list:
@@ -475,10 +485,47 @@ def shuffle(data: List[Any]) -> List[Any]:
     return shuffled_data
 
 
-if __name__ == "__main__":
+class DynamicArray2:
 
-    data = [6, 3, 8, 1, 4, 2]
+    def __init__(self):
 
-    new_data = shuffle(data)
+        self._n = 0  # count
+        self._capacity = 1  # cap
+        self._A = self._make_array(self._capacity)
 
-    print(new_data)
+    def __len__(self) -> int:
+        return self._n
+
+    def append(self, obj: Any) -> None:
+
+        if self._n == self._capacity:
+            self._resize(self._capacity // 4)
+        self._A[self._n] = obj
+        self._n += 1
+
+    def __getitem__(self, k: int) -> Any:
+
+        if not 0 <= k < self._n:
+            raise IndexError("Index out of range")
+
+        return self._A[k]
+
+    def _resize(self, c: int) -> None:
+
+        B = self._make_array(c)
+        for k in range(self._n):
+            B[k] = self._A[k]
+        self._A = B
+        self._capacity = c
+
+    def _make_array(self, capacity: int) -> ctypes.py_object:
+        return (ctypes.py_object * capacity)()
+
+
+# if __name__ == "__main__":
+#
+#     data = [6, 3, 8, 1, 4, 2]
+#
+#     new_data = shuffle(data)
+#
+#     print(new_data)
