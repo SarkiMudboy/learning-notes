@@ -5,12 +5,15 @@ import ctypes
 from typing import Any, List, Dict, Optional
 from time import time
 import random
+import math
 
 
 def test_size_of_list(n: int) -> None:
-    """Experiment to provide empirical evidence that Python’s list class is
-    based upon such a strategy of dynamic arrays
-    args: n -> Length of array"""
+    """
+    Prints the list length and its memory size while repeatedly appending elements to demonstrate Python list growth behavior.
+    
+    Runs for `n` iterations starting from a small list; on each iteration it prints the current length and the result of `sys.getsizeof` for the list.
+    """
 
     data = [None, None, None, None, None, None, None]
     for _ in range(n):
@@ -486,9 +489,20 @@ def shuffle(data: List[Any]) -> List[Any]:
 
 
 class DynamicArray2:
+    """
+
+    Consider an implementation of a dynamic array, but instead of copying
+    the elements into an array of double the size (that is, from N to 2N) when
+    its capacity is reached, we copy the elements into an array with N/4
+    additional cells, going from capacity N to capacity N + N/4
+
+    """
 
     def __init__(self):
 
+        """
+        Initialize an empty dynamic array with zero elements and an initial capacity of 1.
+        """
         self._n = 0  # count
         self._capacity = 1  # cap
         self._A = self._make_array(self._capacity)
@@ -498,8 +512,13 @@ class DynamicArray2:
 
     def append(self, obj: Any) -> None:
 
+        """
+        Append an element to the end of the dynamic array.
+        
+        Inserts the given object at the next available index and increments the element count. If the backing storage is full, the array's capacity is increased (by roughly 25%) before insertion.
+        """
         if self._n == self._capacity:
-            self._resize(self._capacity // 4)
+            self._resize(self._capacity + math.ceil(self._capacity / 4))
         self._A[self._n] = obj
         self._n += 1
 
@@ -512,20 +531,178 @@ class DynamicArray2:
 
     def _resize(self, c: int) -> None:
 
+        """
+        Resize the internal backing array to the specified capacity while preserving existing elements.
+        
+        Parameters:
+            c (int): New capacity for the backing array; must be at least the current number of elements.
+        
+        Detailed behavior:
+            Allocates a new underlying array of size `c`, copies all current elements from the old array into the new one, and updates the internal reference and capacity.
+        """
         B = self._make_array(c)
         for k in range(self._n):
             B[k] = self._A[k]
         self._A = B
         self._capacity = c
 
+    def get_array(self):
+        """
+        Return the underlying ctypes-backed array used as the backing storage.
+        
+        Returns:
+            The internal ctypes array object (the backing storage for this dynamic array).
+        """
+        return self._A
+
     def _make_array(self, capacity: int) -> ctypes.py_object:
+        """
+        Create a new low-level ctypes array for storing Python objects with the given capacity.
+        
+        Parameters:
+            capacity (int): Number of slots to allocate in the array.
+        
+        Returns:
+            ctypes.py_object: A newly allocated ctypes array of length `capacity` suitable for storing Python objects.
+        """
         return (ctypes.py_object * capacity)()
 
 
-# if __name__ == "__main__":
-#
-#     data = [6, 3, 8, 1, 4, 2]
-#
-#     new_data = shuffle(data)
-#
-#     print(new_data)
+def test_size_of_d2_array(n: int) -> None:
+
+    """
+    Measure and print memory usage of a DynamicArray2 instance while appending items.
+    
+    Runs n iterations; before each append it prints the current length, capacity,
+    size in bytes of the underlying ctypes array, and the total estimated size
+    (object plus array).
+    
+    Parameters:
+        n (int): Number of iterations / append operations to perform.
+    """
+    data = DynamicArray2()
+    for _ in range(n):
+        length = len(data)
+        # Size of the object itself
+        obj_size = sys.getsizeof(data)
+        # Size of the underlying ctypes array
+        array_size = sys.getsizeof(ctypes.py_object) * data._capacity
+        total_size = obj_size + array_size
+
+        print(
+            "Length: {0:3d}; Capacity: {1:3d}; Array bytes: {2:4d}; Total bytes: {3:5d}".format(
+                length, data._capacity, array_size, total_size
+            )
+        )
+        data.append(None)
+
+
+class DynamicArray3:
+
+    def __init__(self):
+
+        """
+        Initialize an empty dynamic array with an initial capacity of 1.
+        
+        Sets the element count to 0, the internal capacity to 1, and allocates the backing ctypes array via `_make_array`.
+        """
+        self._n = 0
+        self._capacity = 1
+        self._A = self._make_array(self._capacity)
+
+    def __len__(self) -> int:
+        """
+        Get the number of elements currently stored in the dynamic array.
+        
+        Returns:
+            int: Number of elements in the array.
+        """
+        return self._n
+
+    def __getitem__(self, k) -> any:
+
+        """
+        Return the element at position k from the dynamic array.
+        
+        Parameters:
+            k (int): Zero-based index of the element to retrieve.
+        
+        Returns:
+            any: The element stored at index k.
+        
+        Raises:
+            IndexError: If k is not between 0 and self._n - 1.
+        """
+        if not 0 <= k < self._n:
+            raise IndexError("Index out of range")
+
+        return self._A[k]
+
+    def append(self, obj: any):
+
+        """
+        Append an element to the end of the dynamic array, resizing the backing store if necessary.
+        
+        Parameters:
+            obj (any): Element to append.
+        """
+        if self._n == self._capacity:
+            self._resize(2 * self._capacity)
+
+        self._A[self._n] = obj
+        self._n += 1
+
+    def _resize(self, c: int) -> None:
+
+        """
+        Resize the instance's backing array to the given capacity.
+        
+        Parameters:
+            c (int): New capacity (number of element slots). Must be greater than or equal to the current number of elements.
+        
+        Description:
+            Allocates a new underlying array with capacity `c`, copies existing elements into it, and updates the instance's backing array and capacity.
+        """
+        B = self._make_array(c)
+
+        for k in range(self._n):
+            B[k] = self._A[k]
+        self._A = B
+        self._capacity = c
+
+    def _make_array(self, capacity: int) -> ctypes.py_object:
+        """
+        Create a new low-level ctypes array for storing Python objects with the given capacity.
+        
+        Parameters:
+            capacity (int): Number of slots to allocate in the array.
+        
+        Returns:
+            ctypes.py_object: A newly allocated ctypes array of length `capacity` suitable for storing Python objects.
+        """
+        return (ctypes.py_object * capacity)()
+
+    def pop(self) -> any:
+        """
+        Remove and return the last element, shrinking internal capacity when sparsely populated.
+        
+        If the number of stored elements falls below one quarter of the current capacity, the capacity is reduced by half before removing the last element.
+        
+        Returns:
+            The element that was removed from the end of the array.
+        
+        Raises:
+            IndexError: If the array is empty.
+        """
+
+        if self._n < self._capacity // 4:
+            self._resize(self._capacity // 2)
+
+        obj = self._A.pop()
+        self._n -= 1
+        return obj
+
+
+if __name__ == "__main__":
+
+    test_size_of_d2_array(20)
