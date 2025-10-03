@@ -5,6 +5,7 @@ import ctypes
 from typing import Any, List, Dict, Optional
 from time import time
 import random
+import math
 
 
 def test_size_of_list(n: int) -> None:
@@ -486,6 +487,14 @@ def shuffle(data: List[Any]) -> List[Any]:
 
 
 class DynamicArray2:
+    """
+
+    Consider an implementation of a dynamic array, but instead of copying
+    the elements into an array of double the size (that is, from N to 2N) when
+    its capacity is reached, we copy the elements into an array with N/4
+    additional cells, going from capacity N to capacity N + N/4
+
+    """
 
     def __init__(self):
 
@@ -499,7 +508,7 @@ class DynamicArray2:
     def append(self, obj: Any) -> None:
 
         if self._n == self._capacity:
-            self._resize(self._capacity // 4)
+            self._resize(self._capacity + math.ceil(self._capacity / 4))
         self._A[self._n] = obj
         self._n += 1
 
@@ -518,14 +527,86 @@ class DynamicArray2:
         self._A = B
         self._capacity = c
 
+    def get_array(self):
+        return self._A
+
     def _make_array(self, capacity: int) -> ctypes.py_object:
         return (ctypes.py_object * capacity)()
 
 
-# if __name__ == "__main__":
-#
-#     data = [6, 3, 8, 1, 4, 2]
-#
-#     new_data = shuffle(data)
-#
-#     print(new_data)
+def test_size_of_d2_array(n: int) -> None:
+
+    data = DynamicArray2()
+    for _ in range(n):
+        length = len(data)
+        # Size of the object itself
+        obj_size = sys.getsizeof(data)
+        # Size of the underlying ctypes array
+        array_size = sys.getsizeof(ctypes.py_object) * data._capacity
+        total_size = obj_size + array_size
+
+        print(
+            "Length: {0:3d}; Capacity: {1:3d}; Array bytes: {2:4d}; Total bytes: {3:5d}".format(
+                length, data._capacity, array_size, total_size
+            )
+        )
+        data.append(None)
+
+
+class DynamicArray3:
+
+    def __init__(self):
+
+        self._n = 0
+        self._capacity = 1
+        self._A = self._make_array(self._capacity)
+
+    def __len__(self) -> int:
+        return self._n
+
+    def __getitem__(self, k) -> any:
+
+        if not 0 <= k < self._n:
+            raise IndexError("Index out of range")
+
+        return self._A[k]
+
+    def append(self, obj: any):
+
+        if self._n == self._capacity:
+            self._resize(2 * self._capacity)
+
+        self._A[self._n] = obj
+        self._n += 1
+
+    def _resize(self, c: int) -> None:
+
+        B = self._make_array(c)
+
+        for k in range(self._n):
+            B[k] = self._A[k]
+        self._A = B
+        self._capacity = c
+
+    def _make_array(self, capacity: int) -> ctypes.py_object:
+        return (ctypes.py_object * capacity)()
+
+    def pop(self) -> any:
+        """
+        Implement a pop method for the DynamicArray class, given in Code Frag-
+        ment 5.3, that removes the last element of the array, and that shrinks the
+        capacity, N, of the array by half any time the number of elements in the
+        array goes below N/4.
+        """
+
+        if self._n < self._capacity // 4:
+            self._resize(self._capacity // 2)
+
+        obj = self._A.pop()
+        self._n -= 1
+        return obj
+
+
+if __name__ == "__main__":
+
+    test_size_of_d2_array(20)
