@@ -69,8 +69,12 @@ def reverse_file(file: str, out: str) -> None:
 
 def main():
 
-    parser = argparse.ArgumentParser(description="A CLI app for peeking at text files")
-    parser.add_argument("-f", "--file", help="File to peek", default="results.txt")
+    parser = argparse.ArgumentParser(
+        description="A CLI app for peeking at text files"
+    )
+    parser.add_argument(
+        "-f", "--file", help="File to peek", default="results.txt"
+    )
     args = parser.parse_args()
 
     file = open(args.file, "r")
@@ -176,7 +180,79 @@ def reverse_list(data: list) -> list:
     return reversed
 
 
-if __name__ == "__main__":
+class ArrayQueue:
 
-    arr = [2, 3, 4, 5, 6, 7, 8, 9]
-    print(reverse_list(arr))
+    DEFAULT_CAPACITY = 10
+
+    def __init__(self):
+
+        self._data = [None] * ArrayQueue.DEFAULT_CAPACITY
+        self._size = 0
+        self._front = 0
+
+    def first(self) -> int:
+
+        if self.isEmpty():
+            raise Empty("Queue is empty")
+
+        return self._data[self._front]
+
+    def __len__(self) -> int:
+        return self._size
+
+    def isEmpty(self) -> bool:
+        return self._size == 0
+
+    def dequeue(self) -> Any:
+
+        if self.isEmpty():
+            raise Empty("Queue is empty")
+
+        obj = self._data[self._front]
+        self._data[self._front] = None
+        self._front = (self._front + 1) % len(self._data)
+        self._size -= 1
+
+        return obj
+
+    def enqueue(self, obj: Any) -> None:
+
+        if self._size == len(self._data):
+            # resize
+            self._resize(2 * len(self._data))
+
+        avail = (self._front + self._size) % len(self._data)
+        self._data[avail] = obj
+        self._size += 1
+
+    def _resize(self, capacity) -> None:
+
+        old = self._data
+        self._data = [None] * capacity
+        walk = self._front
+
+        for k in range(self._size):
+            self._data[k] = old[walk]
+            walk = (walk + 1) % len(old)
+
+        self._front = 0
+
+    def __str__(self) -> str:
+        return str(self._data)
+
+
+if __name__ == "__main__":
+    q = ArrayQueue()
+    q.enqueue(5)
+    print(q)  # [5]
+    q.enqueue(3)
+    print(q)  # [5, 3]
+    print(q.dequeue())  # 5
+    q.enqueue(2)
+    print(q)  # [3, 2]
+    q.enqueue(8)
+    print(q)  # [3, 2, 8]
+    print(q.dequeue())  # 3
+    print(q.dequeue())  # 2
+    q.enqueue(9)
+    print(q)  # [8, 9]
