@@ -98,13 +98,14 @@ def main():
             Down.push(line)
         else:
             print("Invalid input")
+            quit(0)
 
         print(Down.top())
 
 
-# if __name__ == "__main__":
-#     main()
-# reverse_file("oop.py", "results.txt")
+if __name__ == "__main__":
+    main()
+    # reverse_file("oop.py", "results.txt")
 
 
 def test_stack():
@@ -241,7 +242,7 @@ class ArrayQueue:
         return str(self._data)
 
 
-if __name__ == "__main__":
+def test():
     q = ArrayQueue()
     q.enqueue(5)
     print(q)  # [5]
