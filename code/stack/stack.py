@@ -103,10 +103,6 @@ def main():
         print(Down.top())
 
 
-if __name__ == "__main__":
-    main()
-    # reverse_file("oop.py", "results.txt")
-
 
 def test_stack():
 
@@ -184,6 +180,7 @@ def reverse_list(data: list) -> list:
 class ArrayQueue:
 
     DEFAULT_CAPACITY = 10
+    EMPTY_ERROR_MSG = "Queue is empty"
 
     def __init__(self):
 
@@ -191,23 +188,23 @@ class ArrayQueue:
         self._size = 0
         self._front = 0
 
-    def first(self) -> int:
+    def first(self) -> Any:
 
-        if self.isEmpty():
-            raise Empty("Queue is empty")
+        if self.is_empty():
+            raise Empty(self.EMPTY_ERROR_MSG)
 
         return self._data[self._front]
 
     def __len__(self) -> int:
         return self._size
 
-    def isEmpty(self) -> bool:
+    def is_empty(self) -> bool:
         return self._size == 0
 
     def dequeue(self) -> Any:
 
-        if self.isEmpty():
-            raise Empty("Queue is empty")
+        if self.is_empty():
+            raise Empty(self.EMPTY_ERROR_MSG)
 
         obj = self._data[self._front]
         self._data[self._front] = None
@@ -226,7 +223,7 @@ class ArrayQueue:
         self._data[avail] = obj
         self._size += 1
 
-    def _resize(self, capacity) -> None:
+    def _resize(self, capacity: int) -> None:
 
         old = self._data
         self._data = [None] * capacity
@@ -239,7 +236,16 @@ class ArrayQueue:
         self._front = 0
 
     def __str__(self) -> str:
-        return str(self._data)
+         
+        data = [None] * self._size
+
+        walk = self._front
+
+        for k in range(self._size):
+            data[k] = self._data[walk]
+            walk = (walk + 1) % len(self._data)
+
+        return str(data)
 
 
 def test():
@@ -257,3 +263,5 @@ def test():
     print(q.dequeue())  # 2
     q.enqueue(9)
     print(q)  # [8, 9]
+
+test()
