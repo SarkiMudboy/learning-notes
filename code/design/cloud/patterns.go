@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-type Circuit func(context context.Context) (string, error)
+type Circuit func(context context.Context, workflow string) error
+
+var ErrServiceUnavailable = errors.New("service unreachable")
 
 /*
 Circuit Breaker automatically degrades service functions in response to a likely fault,
@@ -20,7 +22,7 @@ func Breaker(circuit Circuit, failureThreshold uint) Circuit {
 	var lastAttempt = time.Now()
 	var m sync.RWMutex
 
-	return func(ctx context.Context) (string, error) {
+	return func(ctx context.Context, workflow string) error {
 		m.RLock()
 
 		d := consecutiveFailures - int(failureThreshold)
@@ -29,7 +31,7 @@ func Breaker(circuit Circuit, failureThreshold uint) Circuit {
 			shouldRetryAt := lastAttempt.Add(time.Second * 2 << 2)
 			if !time.Now().After(shouldRetryAt) {
 				m.RUnlock()
-				return "", errors.New("service unreachable")
+				return ErrServiceUnavailable
 			}
 		}
 
@@ -38,18 +40,18 @@ func Breaker(circuit Circuit, failureThreshold uint) Circuit {
 		m.Lock()
 		defer m.Unlock()
 
-		response, err := circuit(ctx)
+		err := circuit(ctx, workflow)
 
 		lastAttempt = time.Now()
 
 		if err != nil {
 			consecutiveFailures++
-			return response, err
+			return err
 		}
 
 		consecutiveFailures = 0
 
-		return response, nil
+		return nil
 	}
 
 }
