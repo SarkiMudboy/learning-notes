@@ -69,8 +69,12 @@ def reverse_file(file: str, out: str) -> None:
 
 def main():
 
-    parser = argparse.ArgumentParser(description="A CLI app for peeking at text files")
-    parser.add_argument("-f", "--file", help="File to peek", default="results.txt")
+    parser = argparse.ArgumentParser(
+        description="A CLI app for peeking at text files"
+    )
+    parser.add_argument(
+        "-f", "--file", help="File to peek", default="results.txt"
+    )
     args = parser.parse_args()
 
     file = open(args.file, "r")
@@ -94,13 +98,10 @@ def main():
             Down.push(line)
         else:
             print("Invalid input")
+            quit(0)
 
         print(Down.top())
 
-
-# if __name__ == "__main__":
-#     main()
-# reverse_file("oop.py", "results.txt")
 
 
 def test_stack():
@@ -176,7 +177,91 @@ def reverse_list(data: list) -> list:
     return reversed
 
 
-if __name__ == "__main__":
+class ArrayQueue:
 
-    arr = [2, 3, 4, 5, 6, 7, 8, 9]
-    print(reverse_list(arr))
+    DEFAULT_CAPACITY = 10
+    EMPTY_ERROR_MSG = "Queue is empty"
+
+    def __init__(self):
+
+        self._data = [None] * ArrayQueue.DEFAULT_CAPACITY
+        self._size = 0
+        self._front = 0
+
+    def first(self) -> Any:
+
+        if self.is_empty():
+            raise Empty(self.EMPTY_ERROR_MSG)
+
+        return self._data[self._front]
+
+    def __len__(self) -> int:
+        return self._size
+
+    def is_empty(self) -> bool:
+        return self._size == 0
+
+    def dequeue(self) -> Any:
+
+        if self.is_empty():
+            raise Empty(self.EMPTY_ERROR_MSG)
+
+        obj = self._data[self._front]
+        self._data[self._front] = None
+        self._front = (self._front + 1) % len(self._data)
+        self._size -= 1
+
+        return obj
+
+    def enqueue(self, obj: Any) -> None:
+
+        if self._size == len(self._data):
+            # resize
+            self._resize(2 * len(self._data))
+
+        avail = (self._front + self._size) % len(self._data)
+        self._data[avail] = obj
+        self._size += 1
+
+    def _resize(self, capacity: int) -> None:
+
+        old = self._data
+        self._data = [None] * capacity
+        walk = self._front
+
+        for k in range(self._size):
+            self._data[k] = old[walk]
+            walk = (walk + 1) % len(old)
+
+        self._front = 0
+
+    def __str__(self) -> str:
+         
+        data = [None] * self._size
+
+        walk = self._front
+
+        for k in range(self._size):
+            data[k] = self._data[walk]
+            walk = (walk + 1) % len(self._data)
+
+        return str(data)
+
+
+def test():
+    q = ArrayQueue()
+    q.enqueue(5)
+    print(q)  # [5]
+    q.enqueue(3)
+    print(q)  # [5, 3]
+    print(q.dequeue())  # 5
+    q.enqueue(2)
+    print(q)  # [3, 2]
+    q.enqueue(8)
+    print(q)  # [3, 2, 8]
+    print(q.dequeue())  # 3
+    print(q.dequeue())  # 2
+    q.enqueue(9)
+    print(q)  # [8, 9]
+
+test()

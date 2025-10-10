@@ -308,6 +308,34 @@ def bin_sqrt(num: int) -> int:
     return result
 
 
+def encoding_solutions() -> str:
+    """
+    Ex. 22 — Encode the following SimpleRisc instructions:
+    """
+
+    results = """
+    1. sub sp, sp, 4
+    solution: 00001 1 1110 1110 00 0000 0000 0000 0100
+    
+    2. mov r4, r5
+    solution: 01001 0 0100 0000 00 0000 0000 0000 0101
+
+    3. addu r4, r4, 3
+    solution: 00000 1 0100 0100 01 0000 0000 0000 0011
+
+    4. ret 
+    solution: 10100 0 0000 0000 00 0000 0000 0000 0000
+
+    5. ld r0, [sp]
+    solution: 01110 1 0000 1110 00 0000 0000 0000 0000
+
+    6. st r4, 8[r9]
+    solution: 01111 1 0100 1001 00 0000 0000 0000 1000
+    """
+
+    return results
+
+
 if __name__ == "__main__":
     print(bin_sqrt(52))
     # print(gcd(48, 36))
