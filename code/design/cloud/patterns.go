@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -23,10 +24,51 @@ func Breaker(circuit Circuit, failureThreshold uint) Circuit {
 	var m sync.RWMutex
 
 	return func(ctx context.Context, workflow string) error {
+		
+		m.Lock()
+		defer m.Unlock()
+
+		d := consecutiveFailures - int(failureThreshold)
+		fmt.Printf("consec fail: %v for %d", consecutiveFailures, d)
+		if d >= 0 {
+			shouldRetryAt := lastAttempt.Add(time.Second * 2 << 2)
+			if !time.Now().After(shouldRetryAt) {
+				return ErrServiceUnavailable
+			}
+		}
+
+		err := circuit(ctx, workflow)
+
+		lastAttempt = time.Now()
+
+		if err != nil {
+			consecutiveFailures++
+			return err
+		}
+
+		consecutiveFailures = 0
+
+		return nil
+	}
+
+}
+
+
+func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
+
+	/* Faulty: because the lock release and acquisition, goroutines can execute the circuit, overwhelming the service 
+	TODO: will test this
+	*/
+
+	var consecutiveFailures int
+	var lastAttempt = time.Now()
+	var m sync.RWMutex
+
+	return func(ctx context.Context, workflow string) error {
 		m.RLock()
 
 		d := consecutiveFailures - int(failureThreshold)
-
+		fmt.Printf("consec fail: %v for %d", consecutiveFailures, d)
 		if d >= 0 {
 			shouldRetryAt := lastAttempt.Add(time.Second * 2 << 2)
 			if !time.Now().After(shouldRetryAt) {
