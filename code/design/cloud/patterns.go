@@ -29,9 +29,9 @@ func Breaker(circuit Circuit, failureThreshold uint) Circuit {
 		defer m.Unlock()
 
 		d := consecutiveFailures - int(failureThreshold)
-		fmt.Printf("consec fail: %v for %d", consecutiveFailures, d)
+		
 		if d >= 0 {
-			shouldRetryAt := lastAttempt.Add(time.Second * 2 << 2)
+			shouldRetryAt := lastAttempt.Add(time.Second * 2 << d)
 			if !time.Now().After(shouldRetryAt) {
 				return ErrServiceUnavailable
 			}
@@ -79,10 +79,10 @@ func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
 
 		m.RUnlock()
 
+		err := circuit(ctx, workflow)
+
 		m.Lock()
 		defer m.Unlock()
-
-		err := circuit(ctx, workflow)
 
 		lastAttempt = time.Now()
 
