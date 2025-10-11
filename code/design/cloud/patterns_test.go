@@ -28,35 +28,67 @@ func TestCircuitBreaker(t *testing.T) {
 
 
 func TestBreakerStayClosed(t *testing.T) {
-	service := Breaker(ForCircuitBreaker(), 4)
+	service := FaultyBreaker(ForCircuitBreaker(), 4)
+	errChan := make(chan error, 3)
+	ctx := context.Background()
 
 	t.Log("Given the need to test that the Circuit stay closed when failure threshold has not been reached")
 	{
-		t.Log("When calling the `ForCircuitBreaker Wrapper function` with default context value 3 times")
+		t.Log("When calling the `ForCircuitBreaker Wrapper function` as 4 goroutines with default context value")
 		{
 			for j := 0; j <= 3; j++ {
-				err := service(context.Background(), "consecutive failures")
-				if !errors.Is(ErrServiceFailure, err) {
-					t.Fatalf("Should return only Service Failure errors as Breaker threshold limit has not being hit: %v", ballotX)
+
+				go func() {
+					e := service(ctx, "consecutive failures")
+					errChan <- e
+				}()
+			}
+
+			for j := 0; j <= 3; j++ {
+				select {
+					case err := <- errChan:
+						if !errors.Is(ErrServiceFailure, err) {
+							t.Errorf("Should return only Service Failure errors as Breaker threshold limit has not being hit: %v", ballotX)
+						}
+					case <- ctx.Done():
+						t.Fatal("Error: could not complete test")
 				}
 			}
+			
 			t.Logf("Should return only Service Failure errors as Breaker threshold limit has not being hit: %v", checkMark)
 		}
 	}
 	
 }
 
-func TestBreakerOpens(t *testing.T) {
-	service := Breaker(ForCircuitBreaker(), 4)
+func TestBreakerTrips(t *testing.T) {
+	service := FaultyBreaker(ForCircuitBreaker(), 4)
+	errChan := make(chan error, 3)
+	ctx := context.Background()
 	var expErr error
 
 	t.Log("Given the need to test that the Circuit opens when failure threshold has been reached")
 	{
-		t.Log("When calling the `ForCircuitBreaker Wrapper function` with default context value 5 times")
+		t.Log("When calling the `ForCircuitBreaker Wrapper function` with default context value as 5 goroutines")
 		{
 			for j := 0; j <= 5; j++ {
-				expErr = service(context.Background(), "consecutive failures")
+				go func() {
+					e := service(ctx, "consecutive failures")
+					errChan <- e
+				}()
 			}
+
+			for j := 0; j <= 5; j++ {
+				select {
+					case err := <- errChan:
+						if errors.Is(ErrServiceUnavailable, err) {
+							expErr = err
+						}
+					case <- ctx.Done():
+						t.Fatal("Error: could not complete test")
+				}
+			}
+
 			if !errors.Is(ErrServiceUnavailable, expErr) {
 				t.Fatalf("Should return Service Unavailable errors as Breaker threshold limit has being hit: %v", ballotX)
 			}
@@ -65,3 +97,5 @@ func TestBreakerOpens(t *testing.T) {
 	}
 	
 }
+
+// func TestFaultyBreaker(t *testing.T) {}
