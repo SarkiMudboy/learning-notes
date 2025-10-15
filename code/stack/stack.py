@@ -182,9 +182,12 @@ class ArrayQueue:
     DEFAULT_CAPACITY = 10
     EMPTY_ERROR_MSG = "Queue is empty"
 
-    def __init__(self):
+    def __init__(self, cap: int=0):
 
-        self._data = [None] * ArrayQueue.DEFAULT_CAPACITY
+        if cap <= 0:
+            cap = ArrayQueue.DEFAULT_CAPACITY
+
+        self._data = [None] * cap
         self._size = 0
         self._front = 0
 
@@ -264,4 +267,67 @@ def test():
     q.enqueue(9)
     print(q)  # [8, 9]
 
-test()
+def test_operations():
+    """
+    R-6.8 Suppose an initially empty queue Q has executed a total of 32 enqueue
+    operations, 10 first operations, and 15 dequeue operations, 5 of which
+    raised Empty errors that were caught and ignored. What is the current
+    size of Q?
+    ----
+    R-6.9 Had the queue of the previous problem been an instance of ArrayQueue
+    that used an initial array of capacity 30, and had its size never been greater
+    than 30, what would be the final value of the front instance variable?
+
+    """
+
+    
+    q = ArrayQueue(30)
+
+    for i in range(10):
+        q.enqueue(i)
+    
+    for _ in range(15):
+        try:
+            print(q.dequeue())
+        except Empty:
+            print("empty")
+            continue
+    
+
+    for i in range(22):
+        q.enqueue(i)
+
+    print(q.first())
+    print(q)
+
+def test_ops2():
+
+    # another approach to R-6.9
+
+    q = ArrayQueue(30)
+
+    for _ in range(5):
+        try:
+            print(q.dequeue())
+        except Empty:
+            print("empty")
+            continue
+    
+    for i in range(30):
+        q.enqueue(i)
+    
+    for _ in range(10):
+        print(q.dequeue())
+
+    for i in range(2):
+        q.enqueue(i)
+
+    print(q.first())
+    print(q)
+
+
+
+if __name__ == '__main__':
+    test_operations()
+    test_ops2()
+    
