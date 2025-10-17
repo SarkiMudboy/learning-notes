@@ -386,7 +386,7 @@ class ArrayDeque:
         """Add element e to the front of deque D."""
 
         if self._size == len(self._data):
-            self._resize(self._cap * 2)
+            self._resize(len(self._data) * 2)
 
         front = (self._front - 1) % len(self._data)
         self._data[front] = e
