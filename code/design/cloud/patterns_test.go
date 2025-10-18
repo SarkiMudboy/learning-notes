@@ -29,7 +29,7 @@ func TestCircuitBreaker(t *testing.T) {
 
 func TestBreakerStayClosed(t *testing.T) {
 	service := FaultyBreaker(ForCircuitBreaker(), 4)
-	errChan := make(chan error, 3)
+	errChan := make(chan error, 4)
 	ctx := context.Background()
 
 	t.Log("Given the need to test that the Circuit stay closed when failure threshold has not been reached")
@@ -63,7 +63,7 @@ func TestBreakerStayClosed(t *testing.T) {
 
 func TestBreakerTrips(t *testing.T) {
 	service := FaultyBreaker(ForCircuitBreaker(), 4)
-	errChan := make(chan error, 3)
+	errChan := make(chan error, 6)
 	ctx := context.Background()
 	var expErr error
 
