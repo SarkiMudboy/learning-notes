@@ -471,7 +471,7 @@ class ArrayDeque:
 
         for k in range(self._size):
             self._data[k] = old[walk]
-            walk = (self._front + 1) % len(old)
+            walk = (walk + 1) % len(old)
         
         self._front = 0
 
@@ -594,9 +594,6 @@ def swap_indices_stack(D: Type[ArrayDeque], S: Type[ArrayStack], index_1: int, i
     return D
 
     
-
-
-
 if __name__ == "__main__":
 
     source_array = [1, 2, 3, 4, 5, 6, 7, 8]
