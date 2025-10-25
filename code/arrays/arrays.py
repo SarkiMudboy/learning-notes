@@ -699,7 +699,18 @@ class DynamicArray3:
             self._resize(self._capacity // 2)
 
         return obj
-
+    
+    def remove(self, val: Any) -> None:
+        """Remove first occurrence of value (or raise ValueError)."""
+        for k in self._n:
+            if self._A[k] == val:
+                for j in range(k, self._n, -1):
+                    self.A[j] = self.A[j+1]
+                self.A[self._n] = None
+                self._n -= 1
+                return
+            
+        raise ValueError('Element not found')
 
 if __name__ == "__main__":
 
