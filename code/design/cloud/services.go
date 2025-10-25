@@ -13,7 +13,7 @@ func ForCircuitBreaker() Circuit {
 	var runs int
 	var r sync.RWMutex
 
-	return func(context context.Context, workflow string) (error) {
+	return func(ctx context.Context, workflow string) (error) {
 		
 		var response error
 		
