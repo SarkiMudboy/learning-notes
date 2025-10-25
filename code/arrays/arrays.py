@@ -702,11 +702,11 @@ class DynamicArray3:
     
     def remove(self, val: Any) -> None:
         """Remove first occurrence of value (or raise ValueError)."""
-        for k in self._n:
+        for k in range(self._n):
             if self._A[k] == val:
                 for j in range(k, self._n, -1):
-                    self.A[j] = self.A[j+1]
-                self.A[self._n] = None
+                    self._A[j] = self._A[j+1]
+                self._A[self._n] = None
                 self._n -= 1
                 return
             
