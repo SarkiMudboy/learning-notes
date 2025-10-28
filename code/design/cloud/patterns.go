@@ -68,7 +68,8 @@ func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
 		m.RLock()
 
 		d := consecutiveFailures - int(failureThreshold)
-		fmt.Printf("consec fail: %v for %d", consecutiveFailures, d)
+		fmt.Println(d, consecutiveFailures, failureThreshold)
+		
 		if d >= 0 {
 			shouldRetryAt := lastAttempt.Add(time.Second * 2 << 2)
 			if !time.Now().After(shouldRetryAt) {
@@ -87,6 +88,7 @@ func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
 		lastAttempt = time.Now()
 
 		if err != nil {
+			fmt.Printf("consec fail: %v for %d\n", consecutiveFailures, d)
 			consecutiveFailures++
 			return err
 		}

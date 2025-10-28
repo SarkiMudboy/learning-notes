@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-var ErrServiceFailure = errors.New("Service Failure")
+var ErrServiceFailure = errors.New("service failure")
 
 func ForCircuitBreaker() Circuit {
 
