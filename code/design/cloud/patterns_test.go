@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 )
 
 const checkMark = "\u2713"
@@ -61,29 +62,65 @@ func TestBreakerStayClosed(t *testing.T) {
 	
 }
 
-func TestBreakerTrips(t *testing.T) {
+func TestBreakerIntermediateFailures(t *testing.T) {
 	service := FaultyBreaker(ForCircuitBreaker(), 4)
 	errChan := make(chan error, 6)
 	ctx := context.Background()
+	runs := 14
 	var expErr error
+
+	t.Log("Given the need to test that the Circuit stays closed when intermediate failures occurs")
+	{
+		t.Logf("When calling the `ForCircuitBreaker Wrapper function` with default context value as %d goroutines", runs)
+		{
+			for j := 0; j <= runs; j++ {
+				go func() {
+					e := service(ctx, "intermediate failures")
+					errChan <- e
+				}()
+			}
+
+			for j := 0; j <= runs; j++ {
+				select {
+					case err := <- errChan:
+						expErr = err
+						t.Log(err)
+					case <- ctx.Done():
+						t.Fatal("Error: could not complete test")
+				}
+			}
+		}
+
+		if expErr != nil {
+			t.Fatalf("Should not return errors as the last Circuit execution was successful: %v", ballotX)
+		}
+		t.Logf("Should not return errors as the last Circuit execution was successful: %v", checkMark)
+	}
+}
+
+func TestBreakerTrips(t *testing.T) {
+	service := FaultyBreaker(ForCircuitBreaker(), 4)
+	errChan := make(chan error, 30)
+	ctx := context.Background()
+	runs := 30
+	var expErr error
+
 
 	t.Log("Given the need to test that the Circuit opens when failure threshold has been reached")
 	{
 		t.Log("When calling the `ForCircuitBreaker Wrapper function` with default context value as 5 goroutines")
 		{
-			for j := 0; j <= 5; j++ {
+			for j := 0; j <= runs; j++ {
 				go func() {
 					e := service(ctx, "consecutive failures")
 					errChan <- e
 				}()
 			}
 
-			for j := 0; j <= 5; j++ {
+			for j := 0; j <= runs; j++ {
 				select {
 					case err := <- errChan:
-						if errors.Is(ErrServiceUnavailable, err) {
-							expErr = err
-						}
+						expErr = err
 					case <- ctx.Done():
 						t.Fatal("Error: could not complete test")
 				}
@@ -98,4 +135,50 @@ func TestBreakerTrips(t *testing.T) {
 	
 }
 
-// func TestFaultyBreaker(t *testing.T) {}
+func TestDebounceLimitRequests(t *testing.T) {
+
+	var serviceRuns int
+	var expErr error
+	service := DebounceFirst(ForDebounce(), time.Second*2)
+	runs := 10
+	resultChan := make(chan int)
+	errChan := make(chan error)
+	ctx := context.Background()
+
+	t.Logf("Given the need to test that the requests cluster of %d are debounced", runs)
+	{
+		t.Logf("When calling the `ForDebounce` Wrapper function` with default context value as %d goroutines", runs)
+		{
+			for j := 0; j <= runs; j++ {
+				go func() {
+					r, err := service(ctx)
+					resultChan <- r
+					errChan <- err
+				}()
+				time.Sleep(time.Millisecond*20)
+			}
+
+			for j := 0; j <= runs; j++ {
+				select {
+					case run := <- resultChan:
+						serviceRuns = run
+					case err := <- errChan:
+						expErr = err
+					case <- ctx.Done():
+						t.Fatal("Error: could not complete test")
+				}
+			}
+
+			if errors.Is(ErrTooManyRequests, expErr) {
+				t.Fatalf("Should not return too many request error as the cluster of requests should have debounced: %v", ballotX)
+			}
+			t.Logf("Should not return too many request error as the cluster of requests should have debounced: %v", checkMark)
+
+			if serviceRuns > 1 {
+				t.Fatalf("the service should only run once, the first operation in the cluster %v", ballotX)
+			}
+			t.Logf("the service should only run once, the first operation in the cluster %v", checkMark)
+		}
+	}
+
+}

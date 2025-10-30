@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 )
 
-type Circuit func(context context.Context, workflow string) error
+type BreakerCircuit func(context context.Context, workflow string) error
 
 var ErrServiceUnavailable = errors.New("service unreachable")
 
@@ -17,7 +16,7 @@ Circuit Breaker automatically degrades service functions in response to a likely
 preventing larger or cascading failures by eliminating recurring errors and providing
 reasonable error responses
 */
-func Breaker(circuit Circuit, failureThreshold uint) Circuit {
+func Breaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit {
 
 	var consecutiveFailures int
 	var lastAttempt = time.Now()
@@ -54,7 +53,7 @@ func Breaker(circuit Circuit, failureThreshold uint) Circuit {
 }
 
 
-func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
+func FaultyBreaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit {
 
 	/* Faulty: because the lock release and acquisition, goroutines can execute the circuit, overwhelming the service 
 	TODO: will test this
@@ -68,10 +67,9 @@ func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
 		m.RLock()
 
 		d := consecutiveFailures - int(failureThreshold)
-		fmt.Println(d, consecutiveFailures, failureThreshold)
 		
 		if d >= 0 {
-			shouldRetryAt := lastAttempt.Add(time.Second * 2 << 2)
+			shouldRetryAt := lastAttempt.Add(time.Second * 2 << d)
 			if !time.Now().After(shouldRetryAt) {
 				m.RUnlock()
 				return ErrServiceUnavailable
@@ -88,7 +86,6 @@ func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
 		lastAttempt = time.Now()
 
 		if err != nil {
-			fmt.Printf("consec fail: %v for %d\n", consecutiveFailures, d)
 			consecutiveFailures++
 			return err
 		}
@@ -98,4 +95,33 @@ func FaultyBreaker(circuit Circuit, failureThreshold uint) Circuit {
 		return nil
 	}
 
+}
+
+type DebouceCircuit func(ctx context.Context) (int, error) 
+
+func DebounceFirst (c DebouceCircuit, d time.Duration) DebouceCircuit {
+	
+	var threshold time.Time
+	var result int
+	var err error
+	var m sync.Mutex
+
+	return func(ctx context.Context) (int, error) {
+
+		m.Lock()
+
+		defer func(){
+			threshold = time.Now().Add(d)
+			m.Unlock()	
+		}()
+
+		if time.Now().Before(threshold) {
+			return result, err
+		}
+
+		result, err = c(ctx)
+		// fmt.Println(result)
+
+		return result, err
+	}
 }
