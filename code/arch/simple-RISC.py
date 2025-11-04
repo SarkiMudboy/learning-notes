@@ -110,7 +110,6 @@ def computeArmstrong(number: int) -> bool:
         temp_num = temp_num // 10
 
     # reverse to get correct order
-
     digits.reverse()
 
     return sum([i**3 for i in digits]) == number

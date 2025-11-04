@@ -1,6 +1,7 @@
 import functools
 import math
 import time
+from typing import List
 
 
 def timer(func):
@@ -57,10 +58,6 @@ class Square:
     def area(self, unit: str):
         return str(self.length**2) + " " + unit
 
-
-if __name__ == "__main__":
-    s = Square(5)
-    print(s.area("m^2"))
 
 
 @debug
@@ -176,3 +173,33 @@ def call_count(func):
 @call_count
 def say_hello(name):
     print(f"Hey {name}")
+
+
+def removeDuplicates(nums: List[int]):
+
+    prev = nums[0]
+    last = nums[-1]
+    count = 1
+
+    for i in range(1, len(nums)):
+        
+        if prev >= last:
+            break
+
+        if (nums[i] - prev) <= 0:
+            for j in range(i, len(nums)):
+                if nums[j] - prev > 0:
+                    nums[i] = nums[j]
+                    break
+
+        prev = nums[i]
+        count+=1
+
+    print(count)
+    return nums
+
+if __name__ == "__main__":
+    a = [1, 2, 2, 2, 4, 6, 6, 7, 8]
+    # a = [0, 0, 0, 0, 3]
+    # a = [1, 1, 2]
+    print(removeDuplicates(a))

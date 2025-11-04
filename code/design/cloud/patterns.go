@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
 
 type BreakerCircuit func(context context.Context, workflow string) error
+type DebouceCircuit func(ctx context.Context) (int, error) 
+type DebounceLastCircuit func(ctx context.Context, resChan chan time.Time, errChan chan error) (int, error)
 
 var ErrServiceUnavailable = errors.New("service unreachable")
 
@@ -39,14 +42,13 @@ func Breaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit {
 		err := circuit(ctx, workflow)
 
 		lastAttempt = time.Now()
-
+		
 		if err != nil {
 			consecutiveFailures++
 			return err
 		}
 
 		consecutiveFailures = 0
-
 		return nil
 	}
 
@@ -69,6 +71,7 @@ func FaultyBreaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit
 		d := consecutiveFailures - int(failureThreshold)
 		
 		if d >= 0 {
+			
 			shouldRetryAt := lastAttempt.Add(time.Second * 2 << d)
 			if !time.Now().After(shouldRetryAt) {
 				m.RUnlock()
@@ -84,7 +87,7 @@ func FaultyBreaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit
 		defer m.Unlock()
 
 		lastAttempt = time.Now()
-
+		fmt.Println(consecutiveFailures)
 		if err != nil {
 			consecutiveFailures++
 			return err
@@ -96,8 +99,6 @@ func FaultyBreaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit
 	}
 
 }
-
-type DebouceCircuit func(ctx context.Context) (int, error) 
 
 func DebounceFirst (c DebouceCircuit, d time.Duration) DebouceCircuit {
 	
@@ -120,8 +121,57 @@ func DebounceFirst (c DebouceCircuit, d time.Duration) DebouceCircuit {
 		}
 
 		result, err = c(ctx)
-		// fmt.Println(result)
 
+		return result, err
+	}
+}
+
+func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
+
+	var m sync.Mutex
+	var err error
+	var result int
+	var threshold time.Time
+	var once sync.Once
+
+	return func(ctx context.Context, resChan chan time.Time, errChan chan error) (int, error) {
+
+		m.Lock()
+		defer m.Unlock()
+
+		threshold = time.Now().Add(d)
+
+		once.Do(func() {
+			ticker := time.NewTicker(time.Millisecond * 100)
+			go func() {
+				defer func() {
+					m.Lock()
+					ticker.Stop()
+					once = sync.Once{}
+					m.Unlock()
+				}()
+				
+				for {
+					select {
+					case <- ticker.C:
+						m.Lock()
+						if time.Now().After(threshold) {
+							fmt.Println("tick")
+							result, err = c(ctx, resChan, errChan)
+							m.Unlock()
+							return
+						}
+						m.Unlock()
+					case <- ctx.Done():
+						m.Lock()
+						result, err = 0, ctx.Err()
+						m.Unlock()
+						return
+					}
+				}
+
+			}()
+		})
 		return result, err
 	}
 }

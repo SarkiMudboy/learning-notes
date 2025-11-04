@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 )
 
 var ErrServiceFailure = errors.New("service failure")
@@ -50,15 +51,38 @@ func ForDebounce() DebouceCircuit {
 		
 		r.Lock()
 		defer r.Unlock()
-
-		if runs > 1 {
+		
+		if runs >= 1 {
 			return runs, ErrTooManyRequests
 		}
+	
 		runs++
-
 		return runs, err
 	}
+}
 
+func ForDebounceLast() DebounceLastCircuit {
+	var runs int
+	var r sync.Mutex
+	var err error
 
+	return func(ctx context.Context, resChan chan time.Time, errChan chan error) (int, error) {
+		
+		r.Lock()
+		defer r.Unlock()
 
+		if runs >= 1 {
+
+			e := ErrTooManyRequests
+			
+			resChan <- time.Now()
+			errChan <- e
+
+			return runs, e
+		}
+
+		runs++
+		resChan <- time.Now()
+		return runs, err
+	}
 }

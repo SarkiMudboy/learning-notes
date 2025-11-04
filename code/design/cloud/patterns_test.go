@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -29,25 +30,25 @@ func TestCircuitBreaker(t *testing.T) {
 
 
 func TestBreakerStayClosed(t *testing.T) {
-	service := FaultyBreaker(ForCircuitBreaker(), 4)
-	errChan := make(chan error, 4)
+	service := Breaker(ForCircuitBreaker(), 4)
+	errChan := make(chan error, 6)
 	ctx := context.Background()
 
 	t.Log("Given the need to test that the Circuit stay closed when failure threshold has not been reached")
 	{
 		t.Log("When calling the `ForCircuitBreaker Wrapper function` as 4 goroutines with default context value")
 		{
-			for j := 0; j <= 3; j++ {
-
+			for j := 0; j <= 10; j++ {
 				go func() {
 					e := service(ctx, "consecutive failures")
 					errChan <- e
 				}()
 			}
 
-			for j := 0; j <= 3; j++ {
+			for j := 0; j <= 10; j++ {
 				select {
 					case err := <- errChan:
+						fmt.Println(err)
 						if !errors.Is(ErrServiceFailure, err) {
 							t.Errorf("Should return only Service Failure errors as Breaker threshold limit has not being hit: %v", ballotX)
 						}
@@ -63,7 +64,7 @@ func TestBreakerStayClosed(t *testing.T) {
 }
 
 func TestBreakerIntermediateFailures(t *testing.T) {
-	service := FaultyBreaker(ForCircuitBreaker(), 4)
+	service := Breaker(ForCircuitBreaker(), 4)
 	errChan := make(chan error, 6)
 	ctx := context.Background()
 	runs := 14
@@ -108,7 +109,7 @@ func TestBreakerTrips(t *testing.T) {
 
 	t.Log("Given the need to test that the Circuit opens when failure threshold has been reached")
 	{
-		t.Log("When calling the `ForCircuitBreaker Wrapper function` with default context value as 5 goroutines")
+		t.Logf("When calling the `ForCircuitBreaker Wrapper function` with default context value as %d goroutines", runs)
 		{
 			for j := 0; j <= runs; j++ {
 				go func() {
@@ -139,7 +140,7 @@ func TestDebounceLimitRequests(t *testing.T) {
 
 	var serviceRuns int
 	var expErr error
-	service := DebounceFirst(ForDebounce(), time.Second*2)
+	service := DebounceFirst(ForDebounce(), time.Millisecond*2)
 	runs := 10
 	resultChan := make(chan int)
 	errChan := make(chan error)
@@ -155,15 +156,16 @@ func TestDebounceLimitRequests(t *testing.T) {
 					resultChan <- r
 					errChan <- err
 				}()
-				time.Sleep(time.Millisecond*20)
 			}
 
 			for j := 0; j <= runs; j++ {
 				select {
 					case run := <- resultChan:
 						serviceRuns = run
+						fmt.Println(run)
 					case err := <- errChan:
 						expErr = err
+						fmt.Println(err)
 					case <- ctx.Done():
 						t.Fatal("Error: could not complete test")
 				}
@@ -180,5 +182,51 @@ func TestDebounceLimitRequests(t *testing.T) {
 			t.Logf("the service should only run once, the first operation in the cluster %v", checkMark)
 		}
 	}
-
 }
+
+func TestDebounceLastExecutesLast(t *testing.T) {
+	var delay time.Time
+	var start time.Time
+	var expErr error
+	service := DebounceLast(ForDebounceLast(), time.Millisecond*500)
+	runs := 10
+	resultChan := make(chan time.Time)
+	errChan := make(chan error)
+	ctx := context.Background()
+
+	t.Logf("Given the need to test that the last request in a cluster of %d requests executes only once after the debounce duration", runs)
+	{
+		t.Logf("When calling the `ForDebounce` Wrapper function` with default context value as %d goroutines", runs)
+		{
+
+			start = time.Now()
+			for j := 0; j < runs; j++ {
+				go func() {
+					service(ctx, resultChan, errChan)
+				}()
+			}
+
+			// for {
+			select {
+				case delay = <- resultChan:
+					fmt.Printf("service run at: %v\n", delay)
+					if delay.Before(start.Add(time.Millisecond * 500)) {
+						t.Fatalf("the service should only run once, the last operation in the cluster %v", ballotX)
+					} 
+				case expErr = <- errChan:
+					fmt.Printf("error: %v\n", expErr)
+				case <- ctx.Done():
+					t.Fatal("Error: could not complete test")
+			}
+			
+			if errors.Is(ErrTooManyRequests, expErr) {
+				t.Fatalf("Should not return too many request error as the last request should have executed after debounce duration: %v", ballotX)
+			}
+			t.Logf("Should not return too many request error as the last request should have executed after debounce duration: %v", checkMark)
+
+			t.Logf("the service should only run once, the last operation in the cluster %v", checkMark)
+		}
+	}
+}
+
+func TestDebounceLastExecutesOnlyOnce(t *testing.T) {}
