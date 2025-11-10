@@ -95,9 +95,9 @@ def find_log(n: int):
         return 1 + find_log(n // 2)
 
 
-if __name__ == "__main__":
-    result = find_log(256)
-    print(result)
+# if __name__ == "__main__":
+#     result = find_log(256)
+#     print(result)
 
 
 def my_find_log(n: int, t: int) -> int:
@@ -285,7 +285,7 @@ def even_first(s: List[int], index: int = 0) -> List[int]:
 
     if s[index] % 2 == 0:
         num = s.pop(index)
-        s.insert(0, num)
+        s.insert(0, num) # terribly inefficient
 
     return even_first(s, index + 1)
 
@@ -397,11 +397,11 @@ def find_max_pair(S: Sequence):
     return helper(S, 0, 0, len(S) - 1, 0, len(S) - 1)
 
 
-# if __name__ == "__main__":
-#     # sq = [1, 2, 8, 0, 4, 3, 9, 5]
-#     sq = [4, 6, 2, 8, 11, 3, 0]
-#     m = find_max_pair(sq)
-#     print(m)
+if __name__ == "__main__":
+    # sq = [1, 2, 8, 0, 4, 3, 9, 5]
+    sq = [4, 6, 2, 8, 11, 3, 0]
+    m = find_pair_sum(sq, 10, 0, len(sq)-1)
+    print(m)
 
 
 # gen by chatgpt
