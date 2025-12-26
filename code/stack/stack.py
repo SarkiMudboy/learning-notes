@@ -9,6 +9,12 @@ class Empty(Exception):
     pass
 
 
+class Full(Exception):
+    """Exception for adding to a full storage"""
+    
+    pass
+
+
 class ArrayStack:
 
     def __init__(self) -> None:
@@ -46,6 +52,60 @@ class ArrayStack:
         """
         R-6.4 Give a recursive method for removing all the elements from a stack.
         """
+
+        if len(self) == 0:
+            return
+
+        self.pop()
+        return self.clear()
+
+
+class MaxArrayStack:
+
+    def __init__(self, data=[], max_len=None) -> None:
+        """ variant -> Allows for initializing the underlying array 
+        C-6.17 In the previous exercise, we assume that the underlying list is initially
+        empty. Redo that exercise, this time preallocating an underlying list with
+        length equal to the stack’s maximum capacity.
+        """
+
+        if max_len and len(data) > max_len:
+            raise Full(f"Cannot initialize list with length ({len(data)}) max length: {max_len}")
+
+        self._stack = data
+        self._max_len = max_len
+
+    def __len__(self) -> int:
+        return len(self._stack)
+
+    def is_empty(self) -> bool:
+        return len(self) == 0
+
+    def top(self) -> Any:
+
+        if self.is_empty():
+            raise Empty("Stack is Empty")
+        return self._stack[-1]
+
+    def push(self, val: Any) -> None:
+
+        if self._max_len and len(self._stack) >= self._max_len:
+            raise Full("Stack is full")
+        
+        self._stack.append(val)
+
+    def pop(self) -> Any:
+
+        if self.is_empty():
+            raise Empty("Stack is Empty")
+
+        return self._stack.pop()
+
+    def __str__(self) -> str:
+
+        return str(self._stack)
+
+    def clear(self) -> None:
 
         if len(self) == 0:
             return
@@ -147,7 +207,6 @@ def transfer(S: ArrayStack, T: ArrayStack) -> None:
         None
 
     """
-    print(S.top())
     for _ in range(len(S)):
 
         T.push(S.pop())
@@ -195,7 +254,7 @@ def isMatched(expr: Union[str, list]) -> bool:
         
     return S.is_empty()
 
-if __name__ == "__main__":
+def testMatched():
     
     expressions = [
         '()(()){([()])}', 
@@ -211,3 +270,80 @@ if __name__ == "__main__":
         results.append(isMatched(e))
     
     print(results)
+
+def is_matched_html(raw: str) -> bool:
+    """Return True if all HTML tags are properly match; False otherwise."""
+
+    S = ArrayStack()
+    j = raw.find("<")
+
+    while j != -1:
+        k = raw.find(">", j+1)
+        if k == -1:
+            return False
+        
+        tag = raw[j+1:k]
+        if not tag.startswith("/"):
+            S.push(tag)
+        else:
+            if S.is_empty():
+                return False
+            else:
+                if tag[1:] != S.pop():
+                    return False
+        j = raw.find("<", k+1)
+    return S.is_empty()
+
+def is_matched_html_with_attr(raw: str) -> bool:
+    """
+    C-6.19 In Code Fragment 6.5 (is_matched_html) we assume that opening tags in HTML have form
+    <name>, as with <li>. More generally, HTML allows optional attributes
+    to be expressed as part of an opening tag. The general form used is
+    <name attribute1="value1" attribute2="value2">; for example,
+    a table can be given a border and additional padding by using an opening
+    tag of <table border="3" cellpadding="5">. Modify Code Frag-
+    ment 6.5 so that it can properly match tags, even when an opening tag
+    may include one or more such attributes.
+    """
+
+    S = ArrayStack()
+    j = raw.find("<")
+
+    while j != -1:
+        k = raw.find(">", j+1)
+        if k == -1:
+            return False
+        
+        tag_with_attr = raw[j+1:k]
+        if not tag_with_attr.startswith("/"):
+            tag = tag_with_attr.split(" ")[0]
+            S.push(tag)
+        else:
+            tag = tag_with_attr[1:]
+            if S.is_empty():
+                return False
+            else:
+                if tag != S.pop():
+                    return False
+        j = raw.find("<", k+1)
+    return S.is_empty()
+
+
+def test_html_match(source: str) -> None:
+
+    content = None
+    matched = False
+
+    with open(source, "r") as f:
+        content = f.read()
+
+    if content:
+        matched = is_matched_html_with_attr(content)
+    
+    return matched
+
+if __name__ == "__main__":
+    m = test_html_match("./index.html")
+    print(f"index is matched?: {m}")
+    
+        
