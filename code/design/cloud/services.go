@@ -10,6 +10,14 @@ import (
 var ErrServiceFailure = errors.New("service failure")
 var ErrTooManyRequests = errors.New("too many requests")
 
+
+type Tracker struct {
+	update uint
+	delay time.Time
+	err error
+	l sync.Mutex
+}
+
 func ForCircuitBreaker() BreakerCircuit {
 
 	var runs int
@@ -66,23 +74,26 @@ func ForDebounceLast() DebounceLastCircuit {
 	var r sync.Mutex
 	var err error
 
-	return func(ctx context.Context, resChan chan time.Time, errChan chan error) (int, error) {
+	return func(ctx context.Context, t *Tracker) (int, error) {
 		
 		r.Lock()
 		defer r.Unlock()
 
+		t.l.Lock()
+		defer t.l.Unlock()
+
 		if runs >= 1 {
-
 			e := ErrTooManyRequests
-			
-			resChan <- time.Now()
-			errChan <- e
-
+			t.delay = time.Now()
+			t.err = e
 			return runs, e
 		}
 
 		runs++
-		resChan <- time.Now()
+
+		t.update = uint(runs)
+		t.delay = time.Now()
+		
 		return runs, err
 	}
 }

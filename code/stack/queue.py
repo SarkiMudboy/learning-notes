@@ -76,8 +76,8 @@ class ArrayQueue:
         return str(data)
 
 
-def test():
-    q = ArrayQueue()
+def test(q):
+    # q = ArrayQueue()
     q.enqueue(5)
     print(q)  # [5]
     q.enqueue(3)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -184,11 +185,48 @@ func TestDebounceLimitRequests(t *testing.T) {
 	}
 }
 
+func TestDebounceLastExecutesOnlyOnce(t *testing.T) {
+
+	var tr Tracker
+	var wg sync.WaitGroup
+	service := DebounceLast(ForDebounceLast(), time.Millisecond*500)
+	runs := 10
+	wg.Add(runs)
+	ctx := context.Background()
+	
+
+	t.Logf("Given the need to test that the last request in a cluster of %d requests executes only once after the debounce duration", runs)
+	{
+		t.Logf("When calling the `ForDebounce` Wrapper function` with default context value as %d goroutines", runs)
+		{
+			for j := 0; j < runs; j++ {
+				go func() {
+					_, _ = service(ctx, &tr)
+					wg.Done()
+				}()
+			}
+			
+			wg.Wait()
+
+			if errors.Is(ErrTooManyRequests, tr.err) {
+				t.Fatalf("Should not return too many request error as the last request should have executed after debounce duration: %v", ballotX)
+			}
+			t.Logf("Should not return too many request error as the last request should have executed after debounce duration: %v", checkMark)
+
+			if tr.update != 1 {
+				t.Fatalf("the service should only run once, the last operation in the cluster %v", ballotX)
+			}
+			t.Logf("the service should only run once, the last operation in the cluster %v", checkMark)
+		}
+	}
+
+}
+
 func TestDebounceLastExecutesLast(t *testing.T) {
 	var delay time.Time
 	var start time.Time
 	var expErr error
-	service := DebounceLast(ForDebounceLast(), time.Millisecond*500)
+	// service := DebounceLast(ForDebounceLast(), time.Millisecond*500)
 	runs := 10
 	resultChan := make(chan time.Time)
 	errChan := make(chan error)
@@ -202,7 +240,8 @@ func TestDebounceLastExecutesLast(t *testing.T) {
 			start = time.Now()
 			for j := 0; j < runs; j++ {
 				go func() {
-					service(ctx, resultChan, errChan)
+					// service(ctx, resultChan, errChan)
+					fmt.Print("ddd")
 				}()
 			}
 
@@ -228,5 +267,3 @@ func TestDebounceLastExecutesLast(t *testing.T) {
 		}
 	}
 }
-
-func TestDebounceLastExecutesOnlyOnce(t *testing.T) {}

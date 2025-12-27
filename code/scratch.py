@@ -59,7 +59,6 @@ class Square:
         return str(self.length**2) + " " + unit
 
 
-
 @debug
 def find_log(n: int):
     """Find the log to base 2 of a given number n"""
@@ -175,31 +174,64 @@ def say_hello(name):
     print(f"Hey {name}")
 
 
-def removeDuplicates(nums: List[int]):
+def removeDuplicates(data: List[int]) -> List[int]:
 
-    prev = nums[0]
-    last = nums[-1]
-    count = 1
+    j = 0
 
-    for i in range(1, len(nums)):
-        
-        if prev >= last:
-            break
+    for i in range(1, len(data)):
 
-        if (nums[i] - prev) <= 0:
-            for j in range(i, len(nums)):
-                if nums[j] - prev > 0:
-                    nums[i] = nums[j]
-                    break
+        if data[j] != data[i]:
+            j += 1
+            data[j] = data[i]
 
-        prev = nums[i]
-        count+=1
+    return data
 
-    print(count)
-    return nums
+
+def isIsomorphic(s: str, t: str) -> bool:
+
+    # same length
+    if len(s) != len(t):
+        return False
+
+    # repeated char occur at the same index
+    ch = {}
+    mp = {}
+    for k in range(len(s)):
+
+        j = ch.get(s[k])
+        i = mp.get(t[k])
+
+        if not j:
+            ch[s[k]] = t[k]
+        elif t[k] != j:
+            return False
+
+        if not i:
+            mp[t[k]] = s[k]
+        elif s[k] != i:
+            return False
+        print(ch.get(s[k]), mp.get(t[k]))
+
+    return True
+
+
+def rotate(data: list) -> list:
+    """rotate an array about its center/axis"""
+
+    def rotate_index(data: list, first: int, last: int):
+
+        d = data[first:last]
+        if len(d) == 0:
+            return data
+
+        data[first], data[last] = data[last], data[first] 
+        return rotate_index(data, first+1, last-1)
+    
+    return rotate_index(data, 0, len(data)-1)
+
+
 
 if __name__ == "__main__":
-    a = [1, 2, 2, 2, 4, 6, 6, 7, 8]
-    # a = [0, 0, 0, 0, 3]
-    # a = [1, 1, 2]
-    print(removeDuplicates(a))
+    d = [3, 1, 5, 9, 0, 8]
+    print(rotate(d))
+
