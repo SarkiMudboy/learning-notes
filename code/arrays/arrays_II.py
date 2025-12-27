@@ -1,5 +1,5 @@
 from typing import List, Any, Optional
-from arrays import DynamicArray3
+from arrays import DynamicArray3, find_cycle
 from time import time
 import sys
 import ctypes
@@ -270,5 +270,60 @@ def compute_average():
         av = ((end - start) / N) * 1000
         print(f"{runs}: {av}")
 
+
+def remove_all(data: List[Any], k: Any) -> None:
+
+    """
+    C-5.25 The syntax data.remove(value) for Python list data removes only the first
+    occurrence of element value from the list. Give an implementation of a
+    function, with signature remove all(data, value), that removes all occur-
+    rences of value from the given list, such that the worst-case running time
+    of the function is O(n) on a list with n elements. Not that it is not efficient
+    enough in general to rely on repeated calls to remove.
+    """
+
+    new_array = []
+
+    for i in data:
+
+        if i != k:
+            new_array.append(i)
+
+    return new_array
+
+def remove_all_k(data: List[Any], k: Any) -> None:
+
+    while True:
+        try:
+            data.remove(k)
+        except Exception:
+            break
+
+    return data
+
+def find_repeated(data: List[int]) -> int:
+
+    slow = data[0]
+    fast = data[0]
+
+    while True:
+        slow = data[slow]
+        fast = data[data[fast]]
+
+        if slow == fast:
+            break
+    
+    slow = data[0]
+    while slow != fast:
+        slow = data[slow]
+        fast = data[fast]
+
+    return slow
+
+# [1, 2, 3, 4, 4, 5, 6, 7]
+#  *        *     *
+# [3, 8, 9, 0, 1]
+
 if __name__ == "__main__":
-    compute_average()
+    # print(find_repeated([1, 2, 3, 4, 4, 5, 6, 7]))
+    print(find_repeated([1, 2, 2, 2]))

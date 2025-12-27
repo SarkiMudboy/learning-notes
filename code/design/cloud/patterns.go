@@ -10,7 +10,7 @@ import (
 
 type BreakerCircuit func(context context.Context, workflow string) error
 type DebouceCircuit func(ctx context.Context) (int, error) 
-type DebounceLastCircuit func(ctx context.Context, resChan chan time.Time, errChan chan error) (int, error)
+type DebounceLastCircuit func(ctx context.Context, t *Tracker) (int, error)
 
 var ErrServiceUnavailable = errors.New("service unreachable")
 
@@ -134,7 +134,7 @@ func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
 	var threshold time.Time
 	var once sync.Once
 
-	return func(ctx context.Context, resChan chan time.Time, errChan chan error) (int, error) {
+	return func(ctx context.Context, t *Tracker) (int, error) {
 
 		m.Lock()
 		defer m.Unlock()
@@ -157,7 +157,7 @@ func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
 						m.Lock()
 						if time.Now().After(threshold) {
 							fmt.Println("tick")
-							result, err = c(ctx, resChan, errChan)
+							result, err = c(ctx, t)
 							m.Unlock()
 							return
 						}

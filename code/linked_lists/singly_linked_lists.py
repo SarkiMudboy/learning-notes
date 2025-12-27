@@ -1,23 +1,39 @@
 from typing import Type, Any, Union
 
 class Empty(Exception):
-    """Exception for access to an empty stack"""
+    """Exception for access to an empty storage"""
 
     pass
 
+class Full(Exception):
+    """Exception for adding to a full storage"""
+    pass
 
-class LinkedStack:
+
+class BaseLinkedList:
 
     class _Node:
-
-        def __init__(self, element: Any, next):
+        def __init__(self, element:Any, next) -> None:
             self._element = element
             self._next = next
 
     def __init__(self):
-
         self._head = None
         self._size = 0
+
+class LinkedStack(BaseLinkedList):
+
+    # class _Node:
+
+    #     def __init__(self, element: Any, next):
+    #         self._element = element
+    #         self._next = next
+
+    def __init__(self):
+    
+        # self._head = None
+        # self._size = 0
+        super().__init__()
 
     def __len__(self) -> int:
 
@@ -54,7 +70,7 @@ class LinkedStack:
     def __str__(self) -> str:
 
         if self.is_empty():
-            return ''
+            return '[]'
         
         array = [self._head._element]
         
@@ -109,9 +125,7 @@ def isMatched(expr: Union[str, list]) -> bool:
         
     return S.is_empty()
 
-if __name__ == "__main__":
-    
-    # test_stack()
+def test_match():
     expressions = [
         '()(()){([()])}', 
         '((()(()){([()])}))', 
@@ -126,3 +140,96 @@ if __name__ == "__main__":
         results.append(isMatched(e))
     
     print(results)
+
+class LinkedQueue(BaseLinkedList):
+
+    def __init__(self):
+        super().__init__()
+        self._tail = None
+    
+    def __len__(self) -> int:
+        return self._size
+    
+    def is_empty(self) -> bool:
+        return self._size == 0
+    
+    def first(self) -> Any:
+        
+        if self.is_empty():
+            raise Empty("Queue is empty")
+        
+        return self._head._element
+    
+    def dequeue(self) -> Any:
+
+        if self.is_empty():
+            raise Empty("Queue is empty")
+
+        val = self._head._element
+        self._head = self._head._next
+        self._size -= 1
+
+        if self.is_empty():
+            self._tail = None
+        
+        return val
+    
+    def enqueue(self, val: Any) -> None:
+
+        n = self._Node(val, None)
+        if self.is_empty():
+            self._head = n
+        else:
+            self._tail._next = n
+        self._tail = n
+        self._size += 1
+
+    def __str__(self) -> str:
+
+        if self.is_empty():
+            return '[]'
+        
+        array = [self._head._element]
+        
+        next = self._head
+        while next._next:
+            next = next._next
+            array.append(next._element)
+        
+        return str(array)
+
+def test_queue():
+    q = LinkedQueue()
+    q.enqueue(5)
+    print(q)  # [5]
+    q.enqueue(3)
+    print(q)  # [5, 3]
+    print(q.dequeue())  # 5
+    q.enqueue(2)
+    print(q)  # [3, 2]
+    q.enqueue(8)
+    print(q)  # [3, 2, 8]
+    print(q.dequeue())  # 3
+    print(q.dequeue())  # 2
+    q.enqueue(9)
+    print(q)  # [8, 9]
+
+def find_max_integer_from_random_stack():
+    
+    stack = LinkedStack()
+    for n in [11, 2, 5]:
+        stack.push(n)
+
+    x = stack.pop()
+    print(f'top -> {stack.top()}, pop -> {x}')
+    x = stack.pop() if x < stack.top() else x
+    print(x)
+    # pop has a probability of 1/3, pop x 2 has a prob 2/3
+    # store the first pop in x and compare the second pop with the first and store the largest
+
+    # Another approach from claude:
+    """
+        x = pop()
+        if pop() > x:
+            x = pop()
+    """

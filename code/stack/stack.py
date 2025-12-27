@@ -342,8 +342,23 @@ def test_html_match(source: str) -> None:
     
     return matched
 
-if __name__ == "__main__":
-    m = test_html_match("./index.html")
-    print(f"index is matched?: {m}")
-    
+def permutate(n: int) -> int:
+    """
+    C-6.20 Describe a nonrecursive algorithm for enumerating all permutations of the
+    numbers {1, 2, . . . , n} using an explicit stack.
+    """
+    if n in (1, 0):
+        return 1
+
+    S = ArrayStack()
+    for k in range(1, n+1):
         
+        if not S.is_empty():
+            S.push(S.top() * k)
+        else:
+            S.push(k)
+    
+    return S.top()
+
+
+
