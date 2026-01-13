@@ -267,3 +267,69 @@ func TestDebounceLastExecutesLast(t *testing.T) {
 		}
 	}
 }
+
+
+func TestRetry(t *testing.T) {
+
+	service := Retry(ForRetry(), 3, time.Second * 2)
+
+	t.Log("Given the need to test that the service retries the request until success")
+	{
+		t.Log("When calling the `ForRetry Wrapper function` with default context value")
+		{
+			secret, err := service(context.Background())
+			
+			if err != nil {
+				t.Fatalf("Should pass as retries exceeds service threshold: %v", ballotX)
+			}
+
+			if secret == "I AM THE ONE" {
+				t.Logf("Should pass as retries exceeds service threshold: %v", checkMark)
+			}
+		}
+	}
+}
+
+func TestThrottleLimitsRequests(t *testing.T) {
+	results := []string{}
+	var m sync.Mutex
+	service := Throttle(ForThrottle(), 2, 2, time.Second*3)
+	runs := 11
+	ctx := context.Background()
+	wg := sync.WaitGroup{}
+	wg.Add(runs)
+
+	t.Log("Given the need to test that the Throttle service limits requests to 2 every 3 seconds")
+	{
+		t.Logf("When calling the `ForThrottle Wrapper function` with default context value as %d goroutines", runs)
+		{
+			for range runs {
+				go func() {
+					defer wg.Done()
+					response, err := service(ctx)
+					if err == nil {
+						m.Lock()
+						results = append(results, response)
+						m.Unlock()
+					}
+				}()
+				time.Sleep(time.Second*1)
+			}
+
+			wg.Wait()
+
+			expectedResults := 8
+			if len(results) != expectedResults {
+				t.Fatalf("Expected results length to be %d, but got %d: %v", expectedResults, len(results), ballotX)
+			}
+			t.Logf("Results length matches expected value of %d: %v", expectedResults, checkMark)
+		
+		}
+	}
+}
+
+
+
+
+
+

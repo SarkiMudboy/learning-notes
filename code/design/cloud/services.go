@@ -97,3 +97,40 @@ func ForDebounceLast() DebounceLastCircuit {
 		return runs, err
 	}
 }
+
+func ForRetry() Effector {
+
+	var calls int
+	var r sync.Mutex
+	const secretPhrase = "I AM THE ONE"
+
+	return func(ctx context.Context) (string, error) {
+
+		r.Lock()
+		defer r.Unlock()
+		
+		calls++
+		
+		if calls > 3 {
+			return secretPhrase, nil
+		}
+		return "", ErrServiceFailure
+	}
+}
+
+func ForThrottle() Effector {
+	var r sync.RWMutex
+	results := []string{"09TY87", "28VX78", "09MN45", "038TRG7", "9864QW9", "RET4234Q", "868RETW", "4WER8U"}
+
+	return func(ctx context.Context) (string, error) {
+		r.RLock()
+		defer r.RUnlock()
+
+		if len(results) == 0 {
+			return "", ErrServiceFailure
+		}
+
+		result := results[len(results)-1]
+		return result, nil
+	}
+}

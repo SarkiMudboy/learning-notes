@@ -11,6 +11,7 @@ import (
 type BreakerCircuit func(context context.Context, workflow string) error
 type DebouceCircuit func(ctx context.Context) (int, error) 
 type DebounceLastCircuit func(ctx context.Context, t *Tracker) (int, error)
+type Effector func(ctx context.Context) (string, error)
 
 var ErrServiceUnavailable = errors.New("service unreachable")
 
@@ -169,9 +170,67 @@ func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
 						return
 					}
 				}
-
 			}()
 		})
 		return result, err
 	}
 }
+
+func Retry(e Effector, retries int, delay time.Duration) Effector {
+	return func(ctx context.Context) (string, error) {
+		for r := 0; ;r++ {
+			response, err := e(ctx)
+
+			if err == nil || r > retries {
+				return response, err
+			}
+
+			fmt.Printf("Attempt %d failed, retrying in %v\n", r+1, delay)
+
+			select{
+				case <- time.After(delay):
+				case <- ctx.Done():
+				return "", ctx.Err()
+			}
+		}
+	}
+}
+
+func Throttle(e Effector, max uint, refill uint, d time.Duration) Effector {
+	var tokens = max
+	var once sync.Once
+
+	return func(ctx context.Context) (string, error) {
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+
+		once.Do(func() {
+			ticker := time.NewTicker(d)
+
+			go func() {
+				for {
+					defer ticker.Stop()
+					select {
+					case <- ctx.Done():
+						return
+					case <- ticker.C:
+						t := tokens + refill
+						if t > max{
+							t = max
+						}
+						tokens = t
+					}
+				}
+			} ()
+		})
+		// fmt.Println(tokens)
+		if tokens <= 0 {
+			return "", ErrTooManyRequests
+		}
+
+		tokens--
+		return e(ctx)
+	}
+}
+
