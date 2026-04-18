@@ -29,7 +29,6 @@ func TestCircuitBreaker(t *testing.T) {
 	}
 }
 
-
 func TestBreakerStayClosed(t *testing.T) {
 	service := Breaker(ForCircuitBreaker(), 4)
 	errChan := make(chan error, 6)
@@ -48,20 +47,20 @@ func TestBreakerStayClosed(t *testing.T) {
 
 			for j := 0; j <= 10; j++ {
 				select {
-					case err := <- errChan:
-						fmt.Println(err)
-						if !errors.Is(ErrServiceFailure, err) {
-							t.Errorf("Should return only Service Failure errors as Breaker threshold limit has not being hit: %v", ballotX)
-						}
-					case <- ctx.Done():
-						t.Fatal("Error: could not complete test")
+				case err := <-errChan:
+					fmt.Println(err)
+					if !errors.Is(ErrServiceFailure, err) {
+						t.Errorf("Should return only Service Failure errors as Breaker threshold limit has not being hit: %v", ballotX)
+					}
+				case <-ctx.Done():
+					t.Fatal("Error: could not complete test")
 				}
 			}
-			
+
 			t.Logf("Should return only Service Failure errors as Breaker threshold limit has not being hit: %v", checkMark)
 		}
 	}
-	
+
 }
 
 func TestBreakerIntermediateFailures(t *testing.T) {
@@ -84,11 +83,11 @@ func TestBreakerIntermediateFailures(t *testing.T) {
 
 			for j := 0; j <= runs; j++ {
 				select {
-					case err := <- errChan:
-						expErr = err
-						t.Log(err)
-					case <- ctx.Done():
-						t.Fatal("Error: could not complete test")
+				case err := <-errChan:
+					expErr = err
+					t.Log(err)
+				case <-ctx.Done():
+					t.Fatal("Error: could not complete test")
 				}
 			}
 		}
@@ -107,7 +106,6 @@ func TestBreakerTrips(t *testing.T) {
 	runs := 30
 	var expErr error
 
-
 	t.Log("Given the need to test that the Circuit opens when failure threshold has been reached")
 	{
 		t.Logf("When calling the `ForCircuitBreaker Wrapper function` with default context value as %d goroutines", runs)
@@ -121,10 +119,10 @@ func TestBreakerTrips(t *testing.T) {
 
 			for j := 0; j <= runs; j++ {
 				select {
-					case err := <- errChan:
-						expErr = err
-					case <- ctx.Done():
-						t.Fatal("Error: could not complete test")
+				case err := <-errChan:
+					expErr = err
+				case <-ctx.Done():
+					t.Fatal("Error: could not complete test")
 				}
 			}
 
@@ -134,7 +132,7 @@ func TestBreakerTrips(t *testing.T) {
 			t.Logf("Should return Service Unavailable errors as Breaker threshold limit has being hit: %v", checkMark)
 		}
 	}
-	
+
 }
 
 func TestDebounceLimitRequests(t *testing.T) {
@@ -161,14 +159,14 @@ func TestDebounceLimitRequests(t *testing.T) {
 
 			for j := 0; j <= runs; j++ {
 				select {
-					case run := <- resultChan:
-						serviceRuns = run
-						fmt.Println(run)
-					case err := <- errChan:
-						expErr = err
-						fmt.Println(err)
-					case <- ctx.Done():
-						t.Fatal("Error: could not complete test")
+				case run := <-resultChan:
+					serviceRuns = run
+					fmt.Println(run)
+				case err := <-errChan:
+					expErr = err
+					fmt.Println(err)
+				case <-ctx.Done():
+					t.Fatal("Error: could not complete test")
 				}
 			}
 
@@ -193,7 +191,6 @@ func TestDebounceLastExecutesOnlyOnce(t *testing.T) {
 	runs := 10
 	wg.Add(runs)
 	ctx := context.Background()
-	
 
 	t.Logf("Given the need to test that the last request in a cluster of %d requests executes only once after the debounce duration", runs)
 	{
@@ -205,7 +202,7 @@ func TestDebounceLastExecutesOnlyOnce(t *testing.T) {
 					wg.Done()
 				}()
 			}
-			
+
 			wg.Wait()
 
 			if errors.Is(ErrTooManyRequests, tr.err) {
@@ -247,17 +244,17 @@ func TestDebounceLastExecutesLast(t *testing.T) {
 
 			// for {
 			select {
-				case delay = <- resultChan:
-					fmt.Printf("service run at: %v\n", delay)
-					if delay.Before(start.Add(time.Millisecond * 500)) {
-						t.Fatalf("the service should only run once, the last operation in the cluster %v", ballotX)
-					} 
-				case expErr = <- errChan:
-					fmt.Printf("error: %v\n", expErr)
-				case <- ctx.Done():
-					t.Fatal("Error: could not complete test")
+			case delay = <-resultChan:
+				fmt.Printf("service run at: %v\n", delay)
+				if delay.Before(start.Add(time.Millisecond * 500)) {
+					t.Fatalf("the service should only run once, the last operation in the cluster %v", ballotX)
+				}
+			case expErr = <-errChan:
+				fmt.Printf("error: %v\n", expErr)
+			case <-ctx.Done():
+				t.Fatal("Error: could not complete test")
 			}
-			
+
 			if errors.Is(ErrTooManyRequests, expErr) {
 				t.Fatalf("Should not return too many request error as the last request should have executed after debounce duration: %v", ballotX)
 			}
@@ -268,17 +265,16 @@ func TestDebounceLastExecutesLast(t *testing.T) {
 	}
 }
 
-
 func TestRetry(t *testing.T) {
 
-	service := Retry(ForRetry(), 3, time.Second * 2)
+	service := Retry(ForRetry(), 3, time.Second*2)
 
 	t.Log("Given the need to test that the service retries the request until success")
 	{
 		t.Log("When calling the `ForRetry Wrapper function` with default context value")
 		{
 			secret, err := service(context.Background())
-			
+
 			if err != nil {
 				t.Fatalf("Should pass as retries exceeds service threshold: %v", ballotX)
 			}
@@ -291,45 +287,140 @@ func TestRetry(t *testing.T) {
 }
 
 func TestThrottleLimitsRequests(t *testing.T) {
-	results := []string{}
-	var m sync.Mutex
-	service := Throttle(ForThrottle(), 2, 2, time.Second*3)
-	runs := 11
-	ctx := context.Background()
-	wg := sync.WaitGroup{}
-	wg.Add(runs)
-
-	t.Log("Given the need to test that the Throttle service limits requests to 2 every 3 seconds")
-	{
-		t.Logf("When calling the `ForThrottle Wrapper function` with default context value as %d goroutines", runs)
+	testCases := []struct {
+		name           string
+		max            uint
+		refill         uint
+		duration       time.Duration
+		runs           uint
+		expectedResult int
+	}{
 		{
-			for range runs {
-				go func() {
-					defer wg.Done()
-					response, err := service(ctx)
-					if err == nil {
-						m.Lock()
-						results = append(results, response)
-						m.Unlock()
+			name:           "2 req/3ms",
+			max:            2,
+			refill:         2,
+			duration:       time.Millisecond * 1,
+			runs:           3,
+			expectedResult: 2,
+		},
+		{
+			name:           "2 req/5ms",
+			max:            4,
+			refill:         2,
+			duration:       time.Millisecond * 1,
+			runs:           7,
+			expectedResult: 4,
+		},
+	}
+
+	for _, tc := range testCases {
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			results := []string{}
+			var m sync.Mutex
+
+			runs := tc.runs
+			ctx := context.Background()
+
+			service := Throttle(ForThrottle(), tc.max, tc.refill, tc.duration)
+
+			wg := sync.WaitGroup{}
+			wg.Add(int(runs))
+
+			t.Logf("Given the need to test that the Throttle service limits requests to %s", tc.name)
+			{
+				t.Logf("When calling the `ForThrottle Wrapper function` with default context value as %d goroutines", runs)
+				{
+					for range runs {
+						go func() {
+							defer wg.Done()
+							response, err := service(ctx)
+							if err == nil {
+								m.Lock()
+								results = append(results, response)
+								m.Unlock()
+							}
+						}()
 					}
-				}()
-				time.Sleep(time.Second*1)
-			}
 
-			wg.Wait()
+					wg.Wait()
 
-			expectedResults := 8
-			if len(results) != expectedResults {
-				t.Fatalf("Expected results length to be %d, but got %d: %v", expectedResults, len(results), ballotX)
+					if len(results) != tc.expectedResult {
+						t.Fatalf("Expected results length to be %d, but got %d: %v", tc.expectedResult, len(results), ballotX)
+					}
+					t.Logf("Results length matches expected value of %d: %v", tc.expectedResult, checkMark)
+				}
 			}
-			t.Logf("Results length matches expected value of %d: %v", expectedResults, checkMark)
-		
-		}
+		})
 	}
 }
 
+func TestThrottleProcessComplyingRequests(t *testing.T) {
+	testCases := []struct {
+		name           string
+		max            uint
+		refill         uint
+		duration       time.Duration
+		runs           uint
+		expectedResult int
+	}{
+		{
+			name:           "4 reqs/2secs",
+			max:            4,
+			refill:         4,
+			duration:       time.Second * 2,
+			runs:           28,
+			expectedResult: 28,
+		},
+	}
 
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 
+			// variables
+			results := []string{}
 
+			var m sync.Mutex
+			runs := tc.runs
 
+			ctx := context.Background()
+			service := Throttle(ForThrottle(), tc.max, tc.refill, tc.duration)
 
+			wg := sync.WaitGroup{}
+			wg.Add(int(runs))
+
+			var counter int
+
+			t.Logf("Given the need to test that the Throttle service limits requests to %s", tc.name)
+			{
+				t.Logf("When calling the `ForThrottle Wrapper function` with default context value as %d goroutines", runs)
+				{
+					for range runs {
+						go func() {
+							defer wg.Done()
+							response, err := service(ctx)
+							if err == nil {
+								m.Lock()
+								results = append(results, response)
+								m.Unlock()
+							}
+						}()
+						counter += 1
+						if counter%int(tc.refill) == 0 {
+							time.Sleep(time.Duration(tc.duration))
+						}
+					}
+
+					wg.Wait()
+
+					if len(results) != tc.expectedResult {
+						t.Fatalf("Expected results length to be %d, but got %d: %v", tc.expectedResult, len(results), ballotX)
+					}
+					t.Logf("Results length matches expected value of %d: %v", tc.expectedResult, checkMark)
+				}
+			}
+		})
+	}
+
+}

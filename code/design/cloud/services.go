@@ -10,12 +10,11 @@ import (
 var ErrServiceFailure = errors.New("service failure")
 var ErrTooManyRequests = errors.New("too many requests")
 
-
 type Tracker struct {
 	update uint
-	delay time.Time
-	err error
-	l sync.Mutex
+	delay  time.Time
+	err    error
+	l      sync.Mutex
 }
 
 func ForCircuitBreaker() BreakerCircuit {
@@ -23,17 +22,17 @@ func ForCircuitBreaker() BreakerCircuit {
 	var runs int
 	var r sync.RWMutex
 
-	return func(ctx context.Context, workflow string) (error) {
-		
+	return func(ctx context.Context, workflow string) error {
+
 		var response error
-		
+
 		r.Lock()
 
 		switch workflow {
 		case "consecutive failures":
 			response = ErrServiceFailure
 		case "intermediate failures":
-			if runs % 2 != 0 {
+			if runs%2 != 0 {
 				response = ErrServiceFailure
 			} else {
 				response = nil
@@ -56,14 +55,14 @@ func ForDebounce() DebouceCircuit {
 	var err error
 
 	return func(ctx context.Context) (int, error) {
-		
+
 		r.Lock()
 		defer r.Unlock()
-		
+
 		if runs >= 1 {
 			return runs, ErrTooManyRequests
 		}
-	
+
 		runs++
 		return runs, err
 	}
@@ -75,7 +74,7 @@ func ForDebounceLast() DebounceLastCircuit {
 	var err error
 
 	return func(ctx context.Context, t *Tracker) (int, error) {
-		
+
 		r.Lock()
 		defer r.Unlock()
 
@@ -93,7 +92,7 @@ func ForDebounceLast() DebounceLastCircuit {
 
 		t.update = uint(runs)
 		t.delay = time.Now()
-		
+
 		return runs, err
 	}
 }
@@ -108,9 +107,9 @@ func ForRetry() Effector {
 
 		r.Lock()
 		defer r.Unlock()
-		
+
 		calls++
-		
+
 		if calls > 3 {
 			return secretPhrase, nil
 		}
@@ -119,8 +118,13 @@ func ForRetry() Effector {
 }
 
 func ForThrottle() Effector {
+	const Length = 40
 	var r sync.RWMutex
-	results := []string{"09TY87", "28VX78", "09MN45", "038TRG7", "9864QW9", "RET4234Q", "868RETW", "4WER8U"}
+	results := []string{}
+
+	for range Length {
+		results = append(results, "099")
+	}
 
 	return func(ctx context.Context) (string, error) {
 		r.RLock()
