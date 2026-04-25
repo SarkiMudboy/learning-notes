@@ -22,8 +22,8 @@ func Funnel(sources ...<-chan int) <-chan int {
 	return out
 }
 
-func Split(source <-chan int, num int) []chan<- int {
-	out := make([]chan<- int, num)
+func Split(source <-chan int, num int) []chan int {
+	out := make([]chan int, num)
 	for i := 0; i < num; i++ {
 		ch := make(chan int)
 		out[i] = ch

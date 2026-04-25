@@ -178,4 +178,53 @@ func ForFanIn(numOfSources int, numOfValues int) []int {
 	return results
 }
 
-func ForFanOut() {}
+func ForFanOut(batchSize int, value int) (int, error) {
+
+	if value % batchSize != 0 {
+		return 0, errors.New("invalid data")
+	}
+
+	outSize := value / batchSize
+	
+	source := make(chan int)
+	result := make(chan int)
+
+	defer close(result)
+
+	dests := Split(source, outSize)
+	
+	var wg sync.WaitGroup 
+	var factorial int
+	
+	go func() {
+		for i := 1; i <= value; i++ {
+			source <- i
+		}
+		close(source)
+	}()
+
+	wg.Add(len(dests))
+
+	for i, d := range dests {
+		go func(i int, ch chan<- int) {
+			defer wg.Done()
+			total := 1
+
+			// continously loop through the channel and compute product
+			for v := range d{
+				total *= v
+			}
+			
+			result <- total
+
+		}(i, d)
+	}
+
+	for r := range result {
+		factorial *= r
+	}
+	
+	wg.Wait()
+	
+	return factorial, nil
+}

@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestFanIn(t *testing.T) {
 	testCases := []struct {
@@ -36,6 +39,40 @@ func TestFanIn(t *testing.T) {
 				t.Errorf("expected length %d, got %d", tc.expectedLen, len(result))
 			}
 			t.Logf("Length match %d : %d", tc.expectedLen, len(result))
+		})
+	}
+}
+
+
+func TestFanOut(t *testing.T) {
+	testCases := []struct{
+		name string
+		batchSize int
+		value int
+		expectedResult int
+		expectedErr error
+	} {
+		{
+			name: "value of 10 and size of 5",
+			batchSize: 5,
+			value: 10,
+			expectedResult: 3628800,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := ForFanOut(tc.batchSize, tc.value)
+			if result != tc.expectedResult {
+				t.Errorf("expected value %d, got %d", tc.expectedResult, result)	
+			}
+				t.Logf("Result match %d : %d", tc.expectedResult, result)
+
+				if errors.Is(tc.expectedErr, err) {
+					t.Errorf("Errors do not match") 
+				}
+				t.Logf("Errors match bro")
 		})
 	}
 }
