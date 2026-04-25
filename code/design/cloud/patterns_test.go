@@ -422,5 +422,65 @@ func TestThrottleProcessComplyingRequests(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestTimeout(t *testing.T) {
+	testCases := []struct {
+		name           string
+		delay          int
+		timeout        int
+		expectedResult string
+		expectederror  error
+	}{
+		{
+			name:           "delay for 10s, timeout after 6s",
+			delay:          10,
+			timeout:        6,
+			expectedResult: "",
+			expectederror:  context.DeadlineExceeded,
+		},
+		{
+			name:           "delay for 11s, timeout after 10s",
+			delay:          11,
+			timeout:        10,
+			expectedResult: "",
+			expectederror:  ErrServiceFailure,
+		},
+		{
+			name:           "delay for 4s, timeout after 6s",
+			delay:          4,
+			timeout:        6,
+			expectedResult: ServiceResponse,
+			expectederror:  nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			service, cancel := Timeout(ForTimeout, time.Second*time.Duration(tc.timeout))
+			defer cancel()
+
+			t.Logf("Given the need to test that the Timeout service timeout after %ds", tc.timeout)
+			{
+				t.Logf("When calling `ForTimeout` with a delay of %ds", tc.delay)
+				res, err := service(tc.delay)
+
+				if res != tc.expectedResult {
+					t.Logf("Expected results to be %s, but got %s %v", tc.expectedResult, res, ballotX)
+				} else {
+					t.Logf("Results matches expected value of %s %v", tc.expectedResult, checkMark)
+				}
+
+				if tc.expectederror == nil {
+					if err != nil {
+						t.Fatalf("expected no error, got %s", err.Error())
+					}
+				} else if errors.Is(err, tc.expectederror) {
+					t.Logf("errors match %s : %s", err.Error(), tc.expectederror.Error())
+				} else {
+					t.Fatalf("errors do not match expected: %s, got %s", tc.expectederror.Error(), err.Error())
+				}
+			}
+		})
+	}
 }

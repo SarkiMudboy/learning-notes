@@ -9,9 +9,10 @@ import (
 )
 
 type BreakerCircuit func(context context.Context, workflow string) error
-type DebouceCircuit func(ctx context.Context) (int, error) 
+type DebouceCircuit func(ctx context.Context) (int, error)
 type DebounceLastCircuit func(ctx context.Context, t *Tracker) (int, error)
 type Effector func(ctx context.Context) (string, error)
+type SlowFunction func(d int) (string, error)
 
 var ErrServiceUnavailable = errors.New("service unreachable")
 
@@ -27,12 +28,12 @@ func Breaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit {
 	var m sync.RWMutex
 
 	return func(ctx context.Context, workflow string) error {
-		
+
 		m.Lock()
 		defer m.Unlock()
 
 		d := consecutiveFailures - int(failureThreshold)
-		
+
 		if d >= 0 {
 			shouldRetryAt := lastAttempt.Add(time.Second * 2 << d)
 			if !time.Now().After(shouldRetryAt) {
@@ -43,7 +44,7 @@ func Breaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit {
 		err := circuit(ctx, workflow)
 
 		lastAttempt = time.Now()
-		
+
 		if err != nil {
 			consecutiveFailures++
 			return err
@@ -55,10 +56,9 @@ func Breaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit {
 
 }
 
-
 func FaultyBreaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit {
 
-	/* Faulty: because the lock release and acquisition, goroutines can execute the circuit, overwhelming the service 
+	/* Faulty: because the lock release and acquisition, goroutines can execute the circuit, overwhelming the service
 	TODO: will test this
 	*/
 
@@ -70,9 +70,9 @@ func FaultyBreaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit
 		m.RLock()
 
 		d := consecutiveFailures - int(failureThreshold)
-		
+
 		if d >= 0 {
-			
+
 			shouldRetryAt := lastAttempt.Add(time.Second * 2 << d)
 			if !time.Now().After(shouldRetryAt) {
 				m.RUnlock()
@@ -101,8 +101,8 @@ func FaultyBreaker(circuit BreakerCircuit, failureThreshold uint) BreakerCircuit
 
 }
 
-func DebounceFirst (c DebouceCircuit, d time.Duration) DebouceCircuit {
-	
+func DebounceFirst(c DebouceCircuit, d time.Duration) DebouceCircuit {
+
 	var threshold time.Time
 	var result int
 	var err error
@@ -112,9 +112,9 @@ func DebounceFirst (c DebouceCircuit, d time.Duration) DebouceCircuit {
 
 		m.Lock()
 
-		defer func(){
+		defer func() {
 			threshold = time.Now().Add(d)
-			m.Unlock()	
+			m.Unlock()
 		}()
 
 		if time.Now().Before(threshold) {
@@ -127,7 +127,7 @@ func DebounceFirst (c DebouceCircuit, d time.Duration) DebouceCircuit {
 	}
 }
 
-func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
+func DebounceLast(c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
 
 	var m sync.Mutex
 	var err error
@@ -151,10 +151,10 @@ func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
 					once = sync.Once{}
 					m.Unlock()
 				}()
-				
+
 				for {
 					select {
-					case <- ticker.C:
+					case <-ticker.C:
 						m.Lock()
 						if time.Now().After(threshold) {
 							fmt.Println("tick")
@@ -163,7 +163,7 @@ func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
 							return
 						}
 						m.Unlock()
-					case <- ctx.Done():
+					case <-ctx.Done():
 						m.Lock()
 						result, err = 0, ctx.Err()
 						m.Unlock()
@@ -178,7 +178,7 @@ func DebounceLast (c DebounceLastCircuit, d time.Duration) DebounceLastCircuit {
 
 func Retry(e Effector, retries int, delay time.Duration) Effector {
 	return func(ctx context.Context) (string, error) {
-		for r := 0; ;r++ {
+		for r := 0; ; r++ {
 			response, err := e(ctx)
 
 			if err == nil || r > retries {
@@ -187,14 +187,19 @@ func Retry(e Effector, retries int, delay time.Duration) Effector {
 
 			fmt.Printf("Attempt %d failed, retrying in %v\n", r+1, delay)
 
-			select{
-				case <- time.After(delay):
-				case <- ctx.Done():
+			select {
+			case <-time.After(delay):
+			case <-ctx.Done():
 				return "", ctx.Err()
 			}
 		}
 	}
 }
+
+/*
+ Throttle limits the frequency of a function call to some maximum number of invoca‐
+ tions per unit of time.
+*/
 
 func Throttle(e Effector, max uint, refill uint, d time.Duration) Effector {
 	var tokens = max
@@ -212,17 +217,17 @@ func Throttle(e Effector, max uint, refill uint, d time.Duration) Effector {
 				for {
 					defer ticker.Stop()
 					select {
-					case <- ctx.Done():
+					case <-ctx.Done():
 						return
-					case <- ticker.C:
+					case <-ticker.C:
 						t := tokens + refill
-						if t > max{
+						if t > max {
 							t = max
 						}
 						tokens = t
 					}
 				}
-			} ()
+			}()
 		})
 		// fmt.Println(tokens)
 		if tokens <= 0 {
@@ -234,3 +239,36 @@ func Throttle(e Effector, max uint, refill uint, d time.Duration) Effector {
 	}
 }
 
+/*
+* Timeout allows a process to stop waiting for an answer once it’s clear that an answer
+may not be coming.
+*/
+func Timeout(f SlowFunction, t time.Duration) (SlowFunction, context.CancelFunc) {
+	ctx := context.Background()
+	tctx, cancel := context.WithTimeout(ctx, t)
+	var m sync.RWMutex
+
+	sf := func(d int) (string, error) {
+
+		m.RLock()
+		defer m.RUnlock()
+
+		cherr := make(chan error)
+		chres := make(chan string)
+
+		go func() {
+			res, err := f(d)
+			chres <- res
+			cherr <- err
+		}()
+
+		select {
+		case res := <-chres:
+			return res, <-cherr
+		case <-tctx.Done():
+			return "", tctx.Err()
+		}
+	}
+
+	return sf, cancel
+}

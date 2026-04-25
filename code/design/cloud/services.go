@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const ServiceResponse = "Attention Is All You Need"
+
 var ErrServiceFailure = errors.New("service failure")
 var ErrTooManyRequests = errors.New("too many requests")
 
@@ -138,3 +140,42 @@ func ForThrottle() Effector {
 		return result, nil
 	}
 }
+
+func ForTimeout(d int) (string, error) {
+	// simple slow function
+	const ErrorThreshold = 10
+
+	if d > ErrorThreshold {
+		return "", ErrServiceFailure
+	}
+
+	time.Sleep(time.Second * time.Duration(d))
+	return ServiceResponse, nil
+}
+
+// concurrency
+func ForFanIn(numOfSources int, numOfValues int) []int {
+	sources := make([]<-chan int, numOfSources)
+	var results []int
+
+	for i := 0; i < numOfSources; i++ {
+		ch := make(chan int)
+		// fmt.Printf("Here %d", i)
+		sources[i] = ch
+
+		go func() {
+			defer close(ch)
+			for j := 0; j < numOfValues; j++ {
+				ch <- j
+				time.Sleep(time.Second * 2)
+			}
+		}()
+	}
+	out := Funnel(sources...)
+	for s := range out {
+		results = append(results, s)
+	}
+	return results
+}
+
+func ForFanOut() {}
