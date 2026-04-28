@@ -1,4 +1,4 @@
-from typing import Type, Any, Union
+from typing import Callable, Type, Any, Union
 
 class Empty(Exception):
     """Exception for access to an empty storage"""
@@ -21,52 +21,9 @@ class BaseLinkedList:
         self._head = None
         self._size = 0
 
-class LinkedStack(BaseLinkedList):
-
-    # class _Node:
-
-    #     def __init__(self, element: Any, next):
-    #         self._element = element
-    #         self._next = next
-
-    def __init__(self):
-    
-        # self._head = None
-        # self._size = 0
-        super().__init__()
-
-    def __len__(self) -> int:
-
-        return self._size
-    
     def is_empty(self) -> bool:
+        return True
 
-        return self._size == 0
-    
-    def top(self) -> Any:
-
-        if self.is_empty():
-            raise Empty('Stack is empty')
-        
-        return self._head._element
-    
-    def push(self, e: Any) -> None:
-
-        self._head = self._Node(e, self._head)
-        self._size += 1
-
-    def pop(self) -> Any:
-
-        if self.is_empty():
-            raise Empty('Stack is empty')
-
-        element = self._head._element
-        self._head = self._head._next
-
-        self._size -= 1
-
-        return element
-    
     def __str__(self) -> str:
 
         if self.is_empty():
@@ -80,6 +37,41 @@ class LinkedStack(BaseLinkedList):
             array.append(next._element)
         
         return str(array)
+
+
+class LinkedStack(BaseLinkedList):
+
+    def __init__(self):
+    
+        super().__init__()
+
+    def __len__(self) -> int:
+        return self._size
+    
+    def is_empty(self) -> bool:
+        return self._size == 0
+    
+    def top(self) -> Any:
+        if self.is_empty():
+            raise Empty('Stack is empty')
+        
+        return self._head._element
+    
+    def push(self, e: Any) -> None:
+        self._head = self._Node(e, self._head)
+        self._size += 1
+
+    def pop(self) -> Any:
+        if self.is_empty():
+            raise Empty('Stack is empty')
+
+        element = self._head._element
+        self._head = self._head._next
+
+        self._size -= 1
+
+        return element
+    
 
 def test_stack():
 
@@ -184,19 +176,6 @@ class LinkedQueue(BaseLinkedList):
         self._tail = n
         self._size += 1
 
-    def __str__(self) -> str:
-
-        if self.is_empty():
-            return '[]'
-        
-        array = [self._head._element]
-        
-        next = self._head
-        while next._next:
-            next = next._next
-            array.append(next._element)
-        
-        return str(array)
 
 def test_queue():
     q = LinkedQueue()
@@ -233,3 +212,108 @@ def find_max_integer_from_random_stack():
         if pop() > x:
             x = pop()
     """
+
+
+class CircularQueue(BaseLinkedList):
+
+    def __init__(self):
+        super().__init__()
+        self._tail = None
+    
+    def is_empty(self) -> bool:
+        return self._size == 0
+
+    def __len__(self) -> int:
+        return self._size
+
+    def first(self) -> Any:
+
+        if self.is_empty():
+            raise Empty("Queue is empty")
+
+        head = self._tail._next
+        return head._element
+
+    def dequeue(self) -> Any: 
+        if self.is_empty():
+            raise Empty("Queue is empty")
+
+        old_head = self._tail._next
+        if self._size == 1:
+            self._tail = None
+        else:
+            self._tail._next = old_head._next
+        self._size -= 1
+        return old_head.element
+
+    def enqueue(self, element: Any) -> None:
+        new_node = self._Node(element, None)
+        if self.is_empty():
+            new_node._next = new_node
+        else:
+            new_node._next = self._tail._next
+            self._tail._next = new_node
+        self._tail = new_node
+
+        self._size += 1
+        return
+
+    def rotate(self):
+        if self._size > 0:
+            self._tail = self._tail._next
+
+    def __str__(self) -> str:
+
+        if self.is_empty():
+            return '[]'
+        
+        array = [self._tail._element]
+        
+        next = self._tail
+        while next._next:
+            next = next._next
+            array.append(next._element)
+        
+        return str(array)
+   
+class RoundRobinScheduler:
+
+    def __init__(self, services: list, operation: Callable):
+        self.queue = CircularQueue()
+        self.services = services or []
+        self._op = operation
+        self.__load_services()
+
+    def __load_services(self):
+        try:
+            for service in self.services:
+                self.queue.enqueue(service)
+        except Exception as ex:
+            print(f"error occured: {ex}")
+
+        return
+
+    def service(self):
+        service = self.queue.first()
+        result = None
+        if service:
+            result = self._op(service)
+
+        self.queue.rotate()
+
+        return result
+
+
+def pay_five_k(name):
+    return f"Paid {name} 5k ..."
+
+def test_rr():
+    s = ["woks", "roland", "antony", "victor"]
+    r = RoundRobinScheduler(s, pay_five_k)
+
+    for _ in range(12):
+        print(r.service())
+
+test_rr()
+
+
