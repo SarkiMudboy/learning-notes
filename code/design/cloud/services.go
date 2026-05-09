@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -11,6 +12,7 @@ const ServiceResponse = "Attention Is All You Need"
 
 var ErrServiceFailure = errors.New("service failure")
 var ErrTooManyRequests = errors.New("too many requests")
+var ErrInvalidInput = errors.New("invalid input")
 
 type Tracker struct {
 	update uint
@@ -181,20 +183,17 @@ func ForFanIn(numOfSources int, numOfValues int) []int {
 func ForFanOut(batchSize int, value int) (int, error) {
 
 	if value % batchSize != 0 {
-		return 0, errors.New("invalid data")
+		return 0, ErrInvalidInput
 	}
 
 	outSize := value / batchSize
-	
 	source := make(chan int)
 	result := make(chan int)
-
-	defer close(result)
-
+	
 	dests := Split(source, outSize)
 	
 	var wg sync.WaitGroup 
-	var factorial int
+	factorial := 1
 	
 	go func() {
 		for i := 1; i <= value; i++ {
@@ -206,7 +205,7 @@ func ForFanOut(batchSize int, value int) (int, error) {
 	wg.Add(len(dests))
 
 	for i, d := range dests {
-		go func(i int, ch chan<- int) {
+		go func(i int, ch <-chan int) {
 			defer wg.Done()
 			total := 1
 
@@ -215,16 +214,76 @@ func ForFanOut(batchSize int, value int) (int, error) {
 				total *= v
 			}
 			
+			fmt.Printf("recieved total -> %d\n", total)
 			result <- total
 
 		}(i, d)
 	}
+	
+	go func() {
+		wg.Wait()
+		close(result)
+	}()
 
-	for r := range result {
+	for r := range result{
 		factorial *= r
 	}
 	
-	wg.Wait()
+	return factorial, nil
+}
+
+func ForFanOutRoundRobin(batchSize int, value int) (int, error) {
+
+	if value % batchSize != 0 {
+		return 0, ErrInvalidInput
+	}
+
+	outSize := value / batchSize
+	source := make(chan int)	
+	dests := Split(source, outSize)
+	
+	factorial := 1
+	
+	go func() {
+		for i := 1; i <= value; i++ {
+			source <- i
+		}
+		close(source)
+	}()
+
+	current := 0
+
+	for {
+		index := current % len(dests)
+		dest := dests[index]
+		val, ok := <- dest
+		if !ok {
+			break
+		}
+		fmt.Printf("obtained: %v from %d\n", val, index)
+		factorial *= val
+		current++
+	}
 	
 	return factorial, nil
+}
+
+
+
+func ForFuture(ctx context.Context, delayInSecs uint, result string) Future {
+	resCh := make(chan string)
+	errChan := make(chan error)
+
+	go func() {
+		select {
+			case <- time.After(time.Second * time.Duration(delayInSecs)):
+				resCh <- result
+				errChan <- nil
+			case <- ctx.Done():
+				resCh <- ""
+				errChan <- ctx.Err()
+		}
+	}()
+	
+	return NewInnerFuture(resCh, errChan)
 }

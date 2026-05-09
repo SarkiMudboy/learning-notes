@@ -2,6 +2,12 @@ package main
 
 import "sync"
 
+
+type Future interface {
+	Result() (string, error)
+}
+
+
 func Funnel(sources ...<-chan int) <-chan int {
 	out := make(chan int)
 
@@ -36,4 +42,40 @@ func Split(source <-chan int, num int) []chan int {
 		}()
 	}
 	return out
+}
+
+
+type InnerFuture struct {
+	// sync
+	once sync.Once
+	wg sync.WaitGroup
+
+	// values
+	res string
+	err error
+
+	// channels
+	resCh chan string
+	errCh chan error
+}
+
+
+func NewInnerFuture(r chan string, e chan error) *InnerFuture {
+	return &InnerFuture{
+		resCh: r,
+		errCh: e,
+	}
+}
+
+
+func (i *InnerFuture) Result() (string, error) {
+	i.once.Do(func() {
+		i.wg.Add(1)
+		defer i.wg.Done()
+		i.res = <- i.resCh
+		i.err = <- i.errCh
+	})
+  // wait
+	i.wg.Wait()
+	return i.res, i.err
 }
