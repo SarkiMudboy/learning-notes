@@ -94,13 +94,13 @@ func TestFuture(t *testing.T) {
 	// test that the return values are correct and
 	// test that subsequest reads do not delay (return cached values)
 	ctx := context.Background()
+	future := ForFuture(ctx, 10, ServiceResponse)
 	
 	t.Log("Given the need to test that the Future does not throw an error for early read")
 
 	{	
 		t.Log("When calling the `ForFuture` with default context value and a delay of 10 secs")
 		{
-			future := ForFuture(ctx, 10, ServiceResponse)
 			res, err := future.Result()
 			if err != nil {
 				t.Errorf("Failed with error: %v %v\n", err, ballotX)
@@ -113,6 +113,11 @@ func TestFuture(t *testing.T) {
 		}
 	}
 
+	// t.Log("Given the need to test that the Future caches the results for subsequent reads")
+	// {
+	// 	r, e := future.Result()
+	// 	if e != nil {}
+	// }
 
 }
 
